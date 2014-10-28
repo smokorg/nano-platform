@@ -9,7 +9,8 @@ class Plugin:
     """
     
     STATE_UNINSTALLED = 0x0
-    """ The plugin is loaded but the installation has not yet taken place.
+    """ The plugin is loaded but the installation has not yet taken place or
+    it has been uninstalled.
     """
     
     STATE_INSTALLED = 0x1
@@ -54,7 +55,7 @@ class Plugin:
 
 
 class PluginContainer:
-    def load_plugin(self, plugin_ref):
+    def load(self):
         pass
 
     def install(self):
@@ -68,7 +69,10 @@ class PluginContainer:
         
     def deactivate(self):
         pass
-        
+    
+    def uninstall(self):
+        pass
+    
     def dispose(self):
         pass
     
