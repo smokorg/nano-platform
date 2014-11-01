@@ -1,0 +1,7 @@
+NOTE! This copyright does *not* cover user programs and plugins that run on 
+top of Nano Plugins Platform and use the platform by normal calls (installation
+and activation of plugins on top of the platform) - this is considered normal
+use of the platform.
+
+The platform itself and the bundle of core plugins distributed with the platform
+are licensed under GPLv3. See the file LICENSE in the root of the distribution.
