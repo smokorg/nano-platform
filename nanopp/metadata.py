@@ -13,6 +13,6 @@ description = 'It does cool things'
 authors = ['Pavle Jonoski']
 authors_string = ', '.join(authors)
 emails = ['jonoski.pavle@gmail.com']
-license = 'MIT'
+license = 'GPLv3'
 copyright = '2014 ' + authors_string
 url = 'http://xmpp-server-project.org/nano-plugins-platform'
