@@ -31,7 +31,7 @@ class Plugin:
     STATE_INSTALLED = 0x1
     """The plugin is installed on the platform.
     
-    At this point all dependencis for the plugin had been resolved and satisfyed.
+    At this point all dependencies for the plugin had been resolved and satisfied.
     """
     
     STATE_ACTIVE = 0x2

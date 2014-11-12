@@ -39,3 +39,4 @@ pip-log.txt
 
 # Gedit & other text editors temp files
 *~
+.idea
