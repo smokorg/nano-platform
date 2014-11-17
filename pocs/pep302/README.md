@@ -7,6 +7,6 @@ POC Goals:
  * Context-aware import - which module does the actual import
  * PEP-302 Finder
  * PEP-302 Loader
- * builtin function ```__import__`` can be replaced in the loaded modules, thus givig control over ```import`` and ```from-import``` statements
+ * builtin function ```__import__``` can be replaced in the loaded modules, thus givig control over ```import``` and ```from-import``` statements
  * Restricting certain packages to be loaded
  * Restricting some modules to load certain packages
