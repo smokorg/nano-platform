@@ -1,13 +1,12 @@
 PEP 302 Finder/Loader Proof-Of-Concept
 --------------------------------------
 
-__GOAL__
+POC Goals:
 
-The POC will show that we can create Finder/Loader based on PEP-302(New Import Hooks)
-that will:
-
- * Make appropriate distinctions between package/module and thus restricting the import of
- certain objects from a module.
- * Will be able to mark who is making the import, so we can have fine-grained control over
- the imported objects
- * Rewrite and replace the __import__ builtin and replace it in a specific submodule
+ * Import from a custom location, not in python path
+ * Context-aware import - which module does the actual import
+ * PEP-302 Finder
+ * PEP-302 Loader
+ * builtin function ```__import__`` can be replaced in the loaded modules, thus givig control over ```import`` and ```from-import``` statements
+ * Restricting certain packages to be loaded
+ * Restricting some modules to load certain packages
