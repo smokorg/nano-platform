@@ -206,6 +206,6 @@ import _ssl (None)
 ```
 
 As seen, the import of ```http.client``` is done by the replaced ```__import__``` function, and the importer is set to: 
-```testpkg.testmod```.
+```testpkg.testmod``` .
 
 If we check the contents of testpkg/testmod.py, we cah see that indeed, the import is done there.
