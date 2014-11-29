@@ -16,7 +16,9 @@
 
 import os
 
+
 class BaseResourceLoader:
+
     def __init__(self, protocol_handlers={}):
         self.protocol_handlers = {}
         
@@ -41,29 +43,30 @@ class BaseResourceLoader:
         return (protocol, path)
     
 
-class ProtocolHanlder:
+class ProtocolHandler:
 
-    def __init__(self, protocol):
+    def __init__(self, protocol, resource_loader):
         self.protocol = protocol
+        self.resource_loader = resource_loader
     
     def load(self, path, *args, **kwargs):
         return None    
 
 
-class FileProtocolHandler(ProtocolHanlder):
+class FileProtocolHandler(ProtocolHandler):
     
-    def __init__(self, base_path):
+    def __init__(self, resource_loader, base_path):
         self.base_path = base_path
-        ProtocolHanlder.__init__(self, 'file')
+        ProtocolHandler.__init__(self, 'file', resource_loader)
     
     def load(self, path, *args, **kwargs):
         path = self.get_real_path(path)
         rw = 'rw' in args or kwargs.get('rw')
         
-        if(self.valid_file(path)):
+        if self.valid_file(path):
             if 'as-string' in args or kwargs.get('as_string'):
                 return self.load_file_as_text(path)
-            else
+            else:
                 return self.load_as_stream(path, rw)
     
     def load_file_as_text(self, path):
@@ -80,4 +83,3 @@ class FileProtocolHandler(ProtocolHanlder):
     
     def valid_file(self, full_path):
         return os.path.exists(full_path) and os.path.isfile(full_path)
-        
