@@ -19,10 +19,11 @@ import os
 
 class BaseResourceLoader:
 
-    def __init__(self, protocol_handlers={}):
+    def __init__(self, protocol_handlers=None):
+        protocol_handlers = protocol_handlers or {}
         self.protocol_handlers = {}
         
-        for name, handler in protocol_handlers.iteritems():
+        for name, handler in protocol_handlers.items():
             self.add_handler(name, handler)
     
     def add_handler(self, protocol, handler):
@@ -40,7 +41,7 @@ class BaseResourceLoader:
     
     def get_path(self, str_specs):
         protocol, sep, path = str_specs.partition(':')
-        return (protocol, path)
+        return protocol, path
     
 
 class ProtocolHandler:
