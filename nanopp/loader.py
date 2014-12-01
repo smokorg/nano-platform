@@ -16,6 +16,7 @@
 
 
 # base PEP-302 finder
+from importlib.abc import SourceLoader
 import re
 
 
@@ -58,3 +59,12 @@ class LoaderEntry:
             if pattern.match(path):
                 return True
         return False
+
+
+class BaseLoader(SourceLoader):
+
+    def __init__(self):
+        BaseLoader.__init__(self)
+
+    def load_module(self, fullname):
+        pass
