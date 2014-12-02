@@ -18,6 +18,44 @@
 # base PEP-302 finder
 from importlib.abc import SourceLoader
 import re
+import threading
+
+__local_context = threading.local()
+__original_import__ = __import__
+
+# constants
+IMPORT_CONTEXT = "nanopp.IMPORT_CONTEXT"
+
+
+def put_to_context(key, value):
+    __local_context[key] = value
+
+
+def get_from_context(key):
+    try:
+        return __local_context[key]
+    except KeyError:
+        return None
+
+
+def extend(dict_a, dict_b):
+    for k, v in dict_b.items():
+        dict_a[k] = v
+
+def create_context_sensitive_import(context):
+    """ Creates context sensitive import function to be used as replacement for the __import__ builtin.
+    :param context: the context to be set when calling __import__
+    :return: the replacement, context-setting import
+    """
+    def context_sensitive_import(*args, **kwargs):
+        """ Context sensitive and setting import.
+        Sets a predefined context in thread local, just before calling and passing control to the Python's
+        builtin __import__
+        :return: the imported module
+        """
+        put_to_context(IMPORT_CONTEXT, context)
+        return __original_import__(*args, **kwargs)
+    return context_sensitive_import
 
 
 class BaseFinder:
@@ -61,10 +99,29 @@ class LoaderEntry:
         return False
 
 
+class RestrictedEntryLoader:
+
+    def load_module(self):
+        raise ImportError
+
+
 class BaseLoader(SourceLoader):
 
     def __init__(self):
-        BaseLoader.__init__(self)
+        SourceLoader.__init__(self)
 
-    def load_module(self, fullname):
+    def get_current_context(self):
+        return get_from_context(IMPORT_CONTEXT)
+
+    def create_context_for_this(self):
         pass
+
+    def exec_module(self, module):
+        module.__context__ = self.context
+        extend(module.__dict__, self.get_overriden_globals())
+        return SourceLoader.exec_module(self, module)
+
+    def get_overriden_globals(self):
+        glb = {}
+        glb['__import__'] = create_context_sensitive_import(self.create_context_for_this())
+        return glb
