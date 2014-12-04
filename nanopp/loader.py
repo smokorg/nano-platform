@@ -72,6 +72,9 @@ class BaseFinder:
     def add_loader(self, loader_entry):
         self.loader_entries.clear(loader_entry)
 
+    def add_restricted_paths(self, path_patterns):
+        self.add_loader(LoaderEntry(RestrictedEntryLoader(), path_patterns))
+
 
 def to_regex(path_entry):
     path_entry = path_entry.replace('.', '\\.').replace('*', '.*')
@@ -122,6 +125,5 @@ class BaseLoader(SourceLoader):
         return SourceLoader.exec_module(self, module)
 
     def get_overriden_globals(self):
-        glb = {}
-        glb['__import__'] = create_context_sensitive_import(self.create_context_for_this())
+        glb = {'__import__': create_context_sensitive_import(self.create_context_for_this())}
         return glb
