@@ -1,10 +1,31 @@
+import logging
+
 __author__ = 'pavle'
 
 """
 Plugin structure:
  <plugin_root>:
     + PLUGIN.MF - Plugin manifest
+
+
+PLUGIN.MF structure:
+
+Pligin-Id: <plugin_id> - string, must be unique
+Version: <major>.<minor>.<patch>
+Requires: <RequiresEntrySpec>,...
+Exports: <ExportsEntrySpec>,...
+Requires-Plugins: <RequiresEntrySpec>,...
+
+Example:
+
+Plugin-Id: nanopp.interactive-shell
+Version: 0.1.1
+Requires: nanopp.* [0.0.1, 1.0);
+Exports: nanopp.remote.*(1.0.0); nanopp.tools(1.0.0)
+Requires-Plugins: nanopp.network-support
 """
+
+logger = logging.getLogger('nanopp.plugins.support')
 
 
 class Entry:
@@ -67,9 +88,9 @@ class RequiresEntry(Entry):
     def from_string(entry_string):
         pass
 
-    def __init__(self, entry_name, version_range, is_package=False):
+    def __init__(self, entry_name, version_range, is_package=False, is_plugin=False):
         Entry.__init__(self, entry_name, is_package)
-
+        self.is_plugin = is_plugin
         if version_range is None or len(version_range) == 0:
             version_range = [(None, False), (None, False)]
         if len(version_range) < 2:
@@ -90,6 +111,7 @@ class PluginManifest:
     def __init__(self):
         self.requires = []
         self.exports = []
+
 
 class PluginResource:
 
