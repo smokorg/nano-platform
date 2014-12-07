@@ -174,8 +174,12 @@ class PluginManifestParser:
 
     def __init__(self, comment=''):
         self.comment = comment
+        self.block_re = re.compile(PluginManifestParser.RGX_PLUGIN_ENTRY) 
 
     def parse(self, manifest_stream):
+        block = None
+        content = None
+        
         while True:
             line = manifest_stream.readline()
             if line is None:
@@ -183,7 +187,20 @@ class PluginManifestParser:
             line = line.strip()
             if line[0] == self.comment:
                 continue
-
+            
+            m = self.block_re.match(line)
+            if m:
+                if block is not None:
+                    self.read_block(block, content or '')
+                block = m.group('block')
+                content = m.group('content')
+            else:
+                content += line.strip()
+            
+    
+    def on_block(self, block, content):
+        pass
+    
     def read_block(self, block, content):
         block_config = PluginManifestParser.BLOCKS.get(block.upper())
         if block_config:
@@ -192,10 +209,10 @@ class PluginManifestParser:
         return self.read_unknown_block(block, content)
 
     def read_plugin_id(self, content):
-        pass
+        return content.strip()
 
     def read_plugin_version(self, content):
-        pass
+        return content.strip()
 
     def read_plugin_classes(self, content):
         pass
@@ -211,17 +228,9 @@ class PluginManifestParser:
 
     def read_unknown_block(self, block, content):
         logger.warn("Unknown block [%s] in manifest. Content: %s" % (block, content))
-
-
-if __name__ == '__main__':
-    RGX_PLUGIN_ENTRY = "^(?P<block>[^:]+):(?P<content>.*)"
-
-    rg = re.compile(RGX_PLUGIN_ENTRY)
-
-    m = rg.match("Plugin-Id: The content")
-
-    if m is None:
-        print("No match")
-    else:
-        print("Block: ", m.group("block"))
-        print("Content: ", m.group("content"))
+    
+    def get_requires_entry(self, entry_str):
+        pass
+        
+    def get_exports_entry(self, entry_str):
+        pass
