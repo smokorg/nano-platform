@@ -206,7 +206,7 @@ class PluginManifestParser:
     ENTRY_SEP = ';'
     COMMENT = "#"
     RGX_PLUGIN_ENTRY = "^(?P<block>[^:]+):(?P<content>.*)"
-    RGX_EXPORT_ENTRY = '^(?P<export>[\\w\\.]+\\s?(\\[(?P<version>[\\w\\.])\\])?'
+    RGX_EXPORT_ENTRY = '^(?P<export>[\\w\\.]+)\\s?(\\[(?P<version>[\\w\\.]+)\\])?'
     RGX_IMPORT_ENTRY = ''
     BLOCKS = {
         "PLUGIN-ID": {
@@ -238,6 +238,7 @@ class PluginManifestParser:
     def __init__(self, comment=COMMENT):
         self.comment = comment
         self.block_re = re.compile(PluginManifestParser.RGX_PLUGIN_ENTRY)
+        self.export_re = re.compile(PluginManifestParser.RGX_EXPORT_ENTRY)
         self.blocks = {}
 
     def parse(self, manifest_stream):
@@ -282,22 +283,41 @@ class PluginManifestParser:
         return content.strip()
 
     def read_plugin_classes(self, content):
-        pass
+        clss = content.split(PluginManifestParser.ENTRY_SEP)
+        return [c for c in clss if c]
 
     def read_requires(self, content):
-        pass
+        return self.get_general_requires_entries(content)
 
     def read_exports(self, content):
-        pass
+        exports_entries = content.split(PluginManifestParser.ENTRY_SEP)
+        entries = []
+        for entry_str in exports_entries:
+            entries.append(self.get_exports_entry(entry_str))
+        return entries
 
     def read_requires_plugins(self, content):
-        pass
+        return self.get_general_requires_entries(content)
 
     def read_unknown_block(self, block, content):
         logger.warn("Unknown block [%s] in manifest. Content: %s" % (block, content))
-    
+
+    def get_general_requires_entries(self, content):
+        requires_entries = content.split(PluginManifestParser.ENTRY_SEP)
+        entries = []
+        for entry_str in requires_entries:
+            entries.append(self.get_requires_entry(entry_str))
+        return entries
+
     def get_requires_entry(self, entry_str):
         pass
         
     def get_exports_entry(self, entry_str):
-        pass
+        m = self.export_re.match(entry_str.strip())
+        if not m:
+            raise Exception('Invalid exports entry: %s.' % entry_str)
+        export = m.group('export')
+        version = m.group('version')
+        if not version:
+            raise Exception("Export %s does not specify version properly" % export)
+        return ExportsEntry(entry_name=export, export_version=version, is_package=False)
