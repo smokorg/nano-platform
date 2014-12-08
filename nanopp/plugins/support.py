@@ -135,6 +135,9 @@ class PluginManifest:
         self.requires_plugins = []
         self.exports = []
 
+    def __str__(self, *args, **kwargs):
+        return "<PluginManifest> id=%s, version=%s" % (self.id, self.version)
+
 
 class PluginManifestBuilder:
 
@@ -200,61 +203,75 @@ class PluginResource:
 
 class PluginManifestParser:
 
+    ENTRY_SEP = ';'
+    COMMENT = "#"
     RGX_PLUGIN_ENTRY = "^(?P<block>[^:]+):(?P<content>.*)"
+    RGX_EXPORT_ENTRY = '^(?P<export>[\\w\\.]+\\s?(\\[(?P<version>[\\w\\.])\\])?'
+    RGX_IMPORT_ENTRY = ''
     BLOCKS = {
         "PLUGIN-ID": {
-            "content_handler": "read_plugin_id"
+            "content_handler": "read_plugin_id",
+            "property": "id"
         },
         "VERSION": {
-            "content_handler": "read_plugin_version"
+            "content_handler": "read_plugin_version",
+            "property": "version"
         },
         "PLUGIN-CLASSES": {
-            "content_handler": "read_plugin_classes"
+            "content_handler": "read_plugin_classes",
+            "property": "plugin_classes"
         },
         "REQUIRES": {
-            "content_handler": "read_requires"
+            "content_handler": "read_requires",
+            "property": "requires"
         },
         "EXPORTS": {
-            "content_handler": "read_exports"
+            "content_handler": "read_exports",
+            "property": "exports"
         },
         "REQUIRES-PLUGINS": {
-            "content_handler": "read_requires_plugins"
+            "content_handler": "read_requires_plugins",
+            "property": "requires_plugins"
         }
     }
 
-    def __init__(self, comment=''):
+    def __init__(self, comment=COMMENT):
         self.comment = comment
         self.block_re = re.compile(PluginManifestParser.RGX_PLUGIN_ENTRY)
         self.blocks = {}
 
     def parse(self, manifest_stream):
         block = None
-        content = None
+        content = ''
         builder = PluginManifestBuilder()
         while True:
             line = manifest_stream.readline()
-            if line is None:
+            if not line:
                 break
             line = line.strip()
-            if line[0] == self.comment:
+            if line and line[0] == self.comment:
                 continue
             
             m = self.block_re.match(line)
             if m:
                 if block is not None:
-                    self.on_block(block, content or '', builder)
+                    self.on_block(block.strip(), content or '', builder)
                 block = m.group('block')
                 content = m.group('content')
             else:
                 content += line.strip()
+        return builder.build()
 
     def on_block(self, block, content, manifest_builder):
-        pass
-    
-    def read_block(self, block, content):
         block_config = PluginManifestParser.BLOCKS.get(block.upper())
-        if block_config:
-            read_method = getattr(self, block_config['content_handler'])
+        read_method = getattr(self, block_config['content_handler']) if block_config else None
+        builder_method = getattr(manifest_builder, block_config['property']) if block_config else None
+        content_entity = self.read_block(block, content, read_method)
+        if builder_method:
+            builder_method(content_entity)
+
+    def read_block(self, block, content, read_method):
+        if read_method:
             return read_method(content)
         return self.read_unknown_block(block, content)
 
