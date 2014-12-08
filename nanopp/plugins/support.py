@@ -136,6 +136,56 @@ class PluginManifest:
         self.exports = []
 
 
+class PluginManifestBuilder:
+
+    def __init__(self):
+        self._id = None
+        self._version = None
+        self._plugin_classes = []
+        self._requires = []
+        self._requires_plugins = []
+        self._exports = []
+
+    def id(self, id):
+        self._id = id
+        return self
+
+    def version(self, version):
+        self._version = version
+        return self
+
+    def plugin_class(self, cls):
+        self._plugin_classes.append(cls)
+        return self
+
+    def plugin_classes(self, classes):
+        self._plugin_classes = classes
+        return self
+
+    def requires(self, require_entry):
+        self._requires.append(require_entry)
+        return self
+
+    def requires_plugins(self, require_entry):
+        self._requires_plugins.append(require_entry)
+        return self
+
+    def exports(self, exports_entry):
+        self._exports.append(exports_entry)
+        return self
+
+    def build(self):
+        manifest = PluginManifest()
+        manifest.id = self._id
+        manifest.version = self._version
+        manifest.plugin_classes = self._plugin_classes
+        manifest.requires = self._requires
+        manifest.requires_plugins = self._requires_plugins
+        manifest.exports = self._exports
+
+        return manifest
+
+
 class PluginResource:
 
     def __init__(self):
@@ -174,12 +224,13 @@ class PluginManifestParser:
 
     def __init__(self, comment=''):
         self.comment = comment
-        self.block_re = re.compile(PluginManifestParser.RGX_PLUGIN_ENTRY) 
+        self.block_re = re.compile(PluginManifestParser.RGX_PLUGIN_ENTRY)
+        self.blocks = {}
 
     def parse(self, manifest_stream):
         block = None
         content = None
-        
+        builder = PluginManifestBuilder()
         while True:
             line = manifest_stream.readline()
             if line is None:
@@ -191,14 +242,13 @@ class PluginManifestParser:
             m = self.block_re.match(line)
             if m:
                 if block is not None:
-                    self.read_block(block, content or '')
+                    self.on_block(block, content or '', builder)
                 block = m.group('block')
                 content = m.group('content')
             else:
                 content += line.strip()
-            
-    
-    def on_block(self, block, content):
+
+    def on_block(self, block, content, manifest_builder):
         pass
     
     def read_block(self, block, content):
