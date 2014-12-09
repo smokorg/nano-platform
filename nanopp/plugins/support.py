@@ -207,7 +207,7 @@ class PluginManifestParser:
     COMMENT = "#"
     RGX_PLUGIN_ENTRY = "^(?P<block>[^:]+):(?P<content>.*)"
     RGX_EXPORT_ENTRY = '^(?P<export>[\\w\\.]+)\\s?(\\[(?P<version>[\\w\\.]+)\\])?'
-    RGX_IMPORT_ENTRY = ''
+    RGX_IMPORT_ENTRY = '^(?P<import>[\\w\\.]+)\\s?((?P<v_min_edge>[\\[\\(])?\\s?(?P<min_version>[\\w\\.]+)?\\s?,?\\s?(?P<max_version>[\\w\\.]+)?\\s?)?(?P<v_max_edge>[\\]\\)])?'
     BLOCKS = {
         "PLUGIN-ID": {
             "content_handler": "read_plugin_id",

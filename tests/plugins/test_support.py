@@ -1,17 +1,20 @@
-import logging
-from logging import DEBUG
-
 __author__ = 'pavle'
 
-import unittest
+import logging
 import sys
+from logging import DEBUG
+
+sys.path.append("../..")
+logging.basicConfig(level=DEBUG)
+
+
+import unittest
 from io import StringIO
 
 
 from nanopp.plugins.support import PluginManifestParser
 
-sys.path.append("../..")
-logging.basicConfig(level=DEBUG)
+
 
 
 class TestPluginManifestParser(unittest.TestCase):
