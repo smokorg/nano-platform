@@ -38,4 +38,4 @@ class TestPluginManifestParser(unittest.TestCase):
         self.assertEqual(manifest.id, "test.plugin")
         self.assertEqual(manifest.version, "0.1.2.TEST")
         self.assertIsNotNone(manifest.plugin_classes)
-        self.assertEquals(len(manifest.plugin_classes), 2, "Expected 2 plugin classes")
+        self.assertEqual(len(manifest.plugin_classes), 2, "Expected 2 plugin classes")

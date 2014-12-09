@@ -239,6 +239,7 @@ class PluginManifestParser:
         self.comment = comment
         self.block_re = re.compile(PluginManifestParser.RGX_PLUGIN_ENTRY)
         self.export_re = re.compile(PluginManifestParser.RGX_EXPORT_ENTRY)
+        self.import_re = re.compile(PluginManifestParser.RGX_IMPORT_ENTRY)
         self.blocks = {}
 
     def parse(self, manifest_stream):
@@ -310,7 +311,22 @@ class PluginManifestParser:
         return entries
 
     def get_requires_entry(self, entry_str):
-        pass
+        m = self.import_re.match(entry_str.strip())
+        if not m:
+            raise Exception('Invalid imports entry: %s' % entry_str)
+        import_str = m.group('import')
+        min_version = m.group('min_version')
+        max_version = m.group('max_version')
+        min_version_incl = m.group('v_min_edge')
+        max_version_incl = m.group('v_max_edge')
+        
+        if min_version:
+            min_version_incl = min_version_incl == '['
+        if max_version:
+            max_version_incl = max_version_incl == ']'
+        return RequiresEntry(entry_name=import_str, \
+            version_range=[(min_version, min_version_incl),(max_version, max_version_incl)], \
+            is_package=False, is_plugin=False)
         
     def get_exports_entry(self, entry_str):
         m = self.export_re.match(entry_str.strip())
