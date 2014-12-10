@@ -42,4 +42,5 @@ class TestPluginManifestParser(unittest.TestCase):
         self.assertEqual(len(manifest.exports), 2, "Expected 2 exports")
         self.assertEqual(len(manifest.requires), 3, "Expected 3 requires entries")
         self.assertEqual(len(manifest.requires_plugins), 2, 'Expected 2 requires_plugins entries')
+    
         

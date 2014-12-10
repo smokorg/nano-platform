@@ -41,7 +41,8 @@ Version: 0.1.1
 Plugin-Classes: nanopp.interactive.ShellPlugin,nanopp.interactive.TelnetPlugin
 Requires: nanopp.* [0.0.1, 1.0);
 Exports: nanopp.remote.*(1.0.0); nanopp.tools(1.0.0)
-Requires-Plugins: nanopp.network-support
+Requires-Plugins: nanopp.network-support (1,3]
+
 """
 
 logger = logging.getLogger('nanopp.plugins.support')
@@ -256,12 +257,14 @@ class PluginManifestParser:
             
             m = self.block_re.match(line)
             if m:
-                if block is not None:
+                if block:
                     self.on_block(block.strip(), content or '', builder)
                 block = m.group('block')
                 content = m.group('content')
             else:
                 content += line.strip()
+        if block and content:
+            self.on_block(block.strip(), content or '', builder)
         return builder.build()
 
     def on_block(self, block, content, manifest_builder):
@@ -291,10 +294,13 @@ class PluginManifestParser:
         return self.get_general_requires_entries(content)
 
     def read_exports(self, content):
+        if not content.strip():
+            return []
         exports_entries = content.split(PluginManifestParser.ENTRY_SEP)
         entries = []
         for entry_str in exports_entries:
-            entries.append(self.get_exports_entry(entry_str))
+            if entry_str:
+                entries.append(self.get_exports_entry(entry_str))
         return entries
 
     def read_requires_plugins(self, content):
@@ -304,16 +310,19 @@ class PluginManifestParser:
         logger.warn("Unknown block [%s] in manifest. Content: %s" % (block, content))
 
     def get_general_requires_entries(self, content):
+        if not content.strip():
+            return []
         requires_entries = content.split(PluginManifestParser.ENTRY_SEP)
         entries = []
         for entry_str in requires_entries:
-            entries.append(self.get_requires_entry(entry_str))
+            if entry_str:
+                entries.append(self.get_requires_entry(entry_str))
         return entries
 
     def get_requires_entry(self, entry_str):
         m = self.import_re.match(entry_str.strip())
         if not m:
-            raise Exception('Invalid imports entry: %s' % entry_str)
+            raise Exception('Invalid imports entry: [%s]' % entry_str)
         import_str = m.group('import')
         min_version = m.group('min_version')
         max_version = m.group('max_version')
