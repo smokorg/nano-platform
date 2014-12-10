@@ -165,16 +165,16 @@ class PluginManifestBuilder:
         self._plugin_classes = classes
         return self
 
-    def requires(self, require_entry):
-        self._requires.append(require_entry)
+    def requires(self, require_entries):
+        self._requires = require_entries
         return self
 
-    def requires_plugins(self, require_entry):
-        self._requires_plugins.append(require_entry)
+    def requires_plugins(self, require_entries):
+        self._requires_plugins = require_entries
         return self
 
-    def exports(self, exports_entry):
-        self._exports.append(exports_entry)
+    def exports(self, exports_entries):
+        self._exports = exports_entries
         return self
 
     def build(self):
