@@ -14,9 +14,6 @@ from io import StringIO
 
 from nanopp.plugins.support import PluginManifestParser
 
-
-
-
 class TestPluginManifestParser(unittest.TestCase):
 
     def setUp(self):
@@ -43,4 +40,20 @@ class TestPluginManifestParser(unittest.TestCase):
         self.assertEqual(len(manifest.requires), 3, "Expected 3 requires entries")
         self.assertEqual(len(manifest.requires_plugins), 2, 'Expected 2 requires_plugins entries')
     
-        
+    def test_parse_requires_entry(self):
+        parser = PluginManifestParser()
+        req_e = parser.get_requires_entry('test.package.module [0.3.5.alpha, 0.4)')
+        self.assertIsNotNone(req_e,'Requires Entry should be returned')
+        self.assertEqual(req_e.name, 'test.package.module')
+        self.assertIsNotNone(req_e.version_range)
+        self.assertEqual(len(req_e.version_range), 2)
+        min_version, min_inclusive = req_e.version_range[0]
+        self.assertIsNotNone(min_version)
+        self.assertIsNotNone(min_inclusive)
+        self.assertEqual(min_version, '0.3.5.alpha')
+        self.assertEqual(min_inclusive, True)
+        max_version, max_inclusive = req_e.version_range[1]
+        self.assertIsNotNone(max_version)
+        self.assertIsNotNone(max_inclusive)
+        self.assertEqual(max_version, '0.4.0')
+        self.assertEqual(max_inclusive, False)
