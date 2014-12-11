@@ -43,7 +43,7 @@ class TestPluginManifestParser(unittest.TestCase):
     def test_parse_requires_entry(self):
         parser = PluginManifestParser()
         req_e = parser.get_requires_entry('test.package.module [0.3.5.alpha, 0.4)')
-        self.assertIsNotNone(req_e,'Requires Entry should be returned')
+        self.assertIsNotNone(req_e, 'Requires Entry should be returned')
         self.assertEqual(req_e.name, 'test.package.module')
         self.assertIsNotNone(req_e.version_range)
         self.assertEqual(len(req_e.version_range), 2)
@@ -57,3 +57,11 @@ class TestPluginManifestParser(unittest.TestCase):
         self.assertIsNotNone(max_inclusive)
         self.assertEqual(max_version, '0.4.0')
         self.assertEqual(max_inclusive, False)
+
+    def test_parse_exports_entry(self):
+        parser = PluginManifestParser()
+        ee = parser.get_exports_entry('test.package.module [1.0.0.SNAPSHOT]')
+        self.assertIsNotNone(ee, 'Exports entry was expected')
+        self.assertEqual(ee.name, 'test.package.module')
+        self.assertIsNotNone(ee.version)
+        self.assertEqual(ee.version,'1.0.0.SNAPSHOT')
