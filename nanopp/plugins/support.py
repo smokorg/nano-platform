@@ -13,6 +13,7 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+from nanopp.resources import BaseResourceLoader, ProtocolHandler
 
 __author__ = 'pavle'
 
@@ -201,6 +202,14 @@ class PluginResource:
     def read_resource(self, resource_path):
         pass
 
+
+class PluginLoaderHandler(ProtocolHandler):
+
+    def __init__(self, resource_loader):
+        ProtocolHandler.__init__(self, 'plugin', resource_loader)
+
+    def load(self, path, *args, **kwargs):
+        pass
 
 class PluginManifestParser:
 
