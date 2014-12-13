@@ -193,11 +193,14 @@ class PluginManifestBuilder:
 
 class PluginResource:
 
-    def __init__(self):
-        pass
+    def __init__(self, path, archive_type='dir'):
+        self.type = archive_type
+        self.manifest = None
+        self.path = path
+        
 
     def get_manifest(self):
-        pass
+        return self.manifest
 
     def read_resource(self, resource_path):
         pass
