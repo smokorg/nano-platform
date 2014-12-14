@@ -13,6 +13,10 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+import abc
+from os.path import isdir
+import os.path
 from nanopp.resources import BaseResourceLoader, ProtocolHandler
 
 __author__ = 'pavle'
@@ -193,17 +197,87 @@ class PluginManifestBuilder:
 
 class PluginResource:
 
-    def __init__(self, path, archive_type='dir'):
+    def __init__(self, path, manifest_parser, archive_type='dir'):
         self.type = archive_type
         self.manifest = None
-        self.path = path
-        
+        self.path = os.path.abspath(path)
+        self.manifest_parser = manifest_parser
 
     def get_manifest(self):
+        if not self.manifest:
+            self.manifest = self.load_manifest()
         return self.manifest
 
-    def read_resource(self, resource_path):
+    def load_manifest(self):
+        if self.resource_exists('PLUGIN.MF', True):
+            manifest_stream = self.read_resource('PLUGIN.MF', True)
+            return self.manifest_parser.parse(manifest_stream)
+        raise Exception('Plugin does not contain manifest file')
+
+    def read_resource(self, resource_path, ignore_case=False):
+        if self.resource_exists(resource_path, ignore_case) and self.resource_is_file(resource_path, ignore_case):
+            if ignore_case:
+                resource_path = self.get_real_rc_name(resource_path)
+            return self.do_load_resource(resource_path)
+        raise Exception('Resource %s not found' % resource_path)
+
+    def read_resource_fully(self, resource_path, ignore_case=False):
+        rc_stream = self.read_resource(resource_path, ignore_case)
+        return rc_stream.read()
+
+    def resource_exists(self, path, ignore_case=False):
+        if not ignore_case:
+            return self.check_resource_exist(path)
+        return self.get_real_rc_name(path) is not None
+
+    def resource_is_file(self, path, ignore_case=False):
+        if not ignore_case:
+            return self.check_resource_is_file(path)
+        rc_name = self.get_real_rc_name(path)
+        if rc_name:
+            return self.check_resource_is_file(rc_name)
+        raise Exception('Resource %s not found' % path)
+
+    def get_real_rc_name(self, path):
+        dirname = os.path.dirname(path) or '.'
+        rc_name = os.path.basename(path)
+        if dirname and self.check_resource_exist(self.get_path(dirname)):
+            list = self.list(dirname)
+            for l in list:
+                if l.upper() == rc_name:
+                    return os.path.sep.join(dirname, l)
+        return None
+
+    @abc.abstractclassmethod
+    def do_load_resource(self, real_name):
         pass
+
+    @abc.abstractclassmethod
+    def list(self, full_path):
+        pass
+
+    @abc.abstractclassmethod
+    def check_resource_exist(self, path):
+        pass
+
+    @abc.abstractclassmethod
+    def check_resource_is_file(self, path):
+        pass
+
+    def get_path(self, path):
+        return os.path.abspath(os.path.sep.join((self.path, path)))
+
+    def is_package(self, pkg):
+        path = pkg.replace('.', os.path.sep)
+        return self.resource_exists(os.path.join(path, '__init__.py'), True)
+
+    def is_module(self, module_name):
+        path = module_name.replace('.', os.path.sep)
+        dirname = os.path.dirname(path)
+        filename = os.path.basename(path)
+
+        fullpath = os.path.join(dirname, filename+'.py')
+        return self.resource_exists(fullpath, True) and self.resource_is_file(fullpath, True)
 
 
 class PluginLoaderHandler(ProtocolHandler):
@@ -212,7 +286,17 @@ class PluginLoaderHandler(ProtocolHandler):
         ProtocolHandler.__init__(self, 'plugin', resource_loader)
 
     def load(self, path, *args, **kwargs):
+        if isdir(path):
+            return self.load_exploded_plugin(path)
+        else:
+            return self.load_archive_plugin(path)
+
+    def load_exploded_plugin(self, path):
         pass
+
+    def load_archive_plugin(self, path):
+        pass
+
 
 class PluginManifestParser:
 
