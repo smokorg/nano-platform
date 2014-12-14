@@ -280,6 +280,28 @@ class PluginResource:
         return self.resource_exists(fullpath, True) and self.resource_is_file(fullpath, True)
 
 
+class ExplodedPlugin(PluginResource):
+
+    def __init__(self, path, manifest_parser):
+        PluginResource.__init__(self, path, manifest_parser, 'dir')
+
+    def do_load_resource(self, real_name):
+        return open(self.get_path(real_name))
+
+    def list(self, full_path):
+        return os.listdir(self.get_path(full_path))
+
+    def check_resource_exist(self, path):
+        if path == '.':
+            return True
+        return os.path.exists(self.get_path(path))
+
+    def check_resource_is_file(self, path):
+        if path == '.':
+            return False
+        return os.path.isfile(self.get_path(path))
+
+
 class PluginLoaderHandler(ProtocolHandler):
 
     def __init__(self, resource_loader):
