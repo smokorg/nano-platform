@@ -306,6 +306,7 @@ class PluginLoaderHandler(ProtocolHandler):
 
     def __init__(self, resource_loader):
         ProtocolHandler.__init__(self, 'plugin', resource_loader)
+        self.manifest_parser = PluginManifestParser()
 
     def load(self, path, *args, **kwargs):
         if isdir(path):
@@ -314,10 +315,17 @@ class PluginLoaderHandler(ProtocolHandler):
             return self.load_archive_plugin(path)
 
     def load_exploded_plugin(self, path):
-        pass
+        plugin_rc = ExplodedPlugin(path, self.manifest_parser)
+        self.basic_plugin_check(plugin_rc)
+        return plugin_rc
 
     def load_archive_plugin(self, path):
-        pass
+        raise Exception('Archived plugins not supported (yet)!')
+
+    def basic_plugin_check(self, plugin_rc):
+        manifest = plugin_rc.get_manifest()
+        if not manifest:
+            raise Exception("Plugin has not manifest")
 
 
 class PluginManifestParser:
