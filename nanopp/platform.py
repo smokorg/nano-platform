@@ -18,8 +18,8 @@
 class Plugin:
     """ Base class for all Plugins.
     
-    This is the entry point in the plugin itself. Each plugin MUST exponse 
-    at most one implementation of Plguin.
+    This is the entry point in the plugin itself. Each plugin MUST expose
+    at least one implementation of Plguin.
     
     """
     
