@@ -1,4 +1,4 @@
-#    This file is part of Nano Plugins Platform
+# This file is part of Nano Plugins Platform
 #    Copyright (C) 2014 Pavle Jonoski
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -54,14 +54,12 @@ logger = logging.getLogger('nanopp.plugins.support')
 
 
 class Entry:
-
     def __init__(self, entry_name, is_package=False):
         self.name = entry_name
         self.is_package = is_package
 
 
 class ExportsEntry(Entry):
-
     def __init__(self, entry_name, export_version, is_package=False):
         Entry.__init__(self, entry_name, is_package)
         self.version = export_version
@@ -108,7 +106,6 @@ def normalize_version_string(version):
 
 
 class RequiresEntry(Entry):
-
     @staticmethod
     def from_string(entry_string):
         pass
@@ -128,11 +125,10 @@ class RequiresEntry(Entry):
         max_version, max_inclusive = self.version_range[1]
 
         return check_min_version(version, min_version, min_inclusive) and \
-            check_max_version(version, max_version, max_inclusive)
+               check_max_version(version, max_version, max_inclusive)
 
 
 class PluginManifest:
-
     def __init__(self):
         self.id = None
         self.version = None
@@ -146,7 +142,6 @@ class PluginManifest:
 
 
 class PluginManifestBuilder:
-
     def __init__(self):
         self._id = None
         self._version = None
@@ -196,7 +191,6 @@ class PluginManifestBuilder:
 
 
 class PluginResource:
-
     def __init__(self, path, manifest_parser, archive_type='dir'):
         self.type = archive_type
         self.manifest = None
@@ -276,12 +270,11 @@ class PluginResource:
         dirname = os.path.dirname(path)
         filename = os.path.basename(path)
 
-        fullpath = os.path.join(dirname, filename+'.py')
+        fullpath = os.path.join(dirname, filename + '.py')
         return self.resource_exists(fullpath, True) and self.resource_is_file(fullpath, True)
 
 
 class ExplodedPlugin(PluginResource):
-
     def __init__(self, path, manifest_parser):
         PluginResource.__init__(self, path, manifest_parser, 'dir')
 
@@ -303,7 +296,6 @@ class ExplodedPlugin(PluginResource):
 
 
 class PluginLoaderHandler(ProtocolHandler):
-
     def __init__(self, resource_loader):
         ProtocolHandler.__init__(self, 'plugin', resource_loader)
         self.manifest_parser = PluginManifestParser()
@@ -329,7 +321,6 @@ class PluginLoaderHandler(ProtocolHandler):
 
 
 class PluginManifestParser:
-
     ENTRY_SEP = ';'
     COMMENT = "#"
     RGX_PLUGIN_ENTRY = "^(?P<block>[^:]+):(?P<content>.*)"
@@ -380,7 +371,7 @@ class PluginManifestParser:
             line = line.strip()
             if line and line[0] == self.comment:
                 continue
-            
+
             m = self.block_re.match(line)
             if m:
                 if block:
@@ -454,15 +445,15 @@ class PluginManifestParser:
         max_version = m.group('max_version')
         min_version_incl = m.group('v_min_edge')
         max_version_incl = m.group('v_max_edge')
-        
+
         if min_version:
             min_version_incl = min_version_incl == '['
         if max_version:
             max_version_incl = max_version_incl == ']'
-        return RequiresEntry(entry_name=import_str, \
-            version_range=[(min_version, min_version_incl),(max_version, max_version_incl)], \
-            is_package=False, is_plugin=False)
-        
+        return RequiresEntry(entry_name=import_str,
+                             version_range=[(min_version, min_version_incl), (max_version, max_version_incl)],
+                             is_package=False, is_plugin=False)
+
     def get_exports_entry(self, entry_str):
         m = self.export_re.match(entry_str.strip())
         if not m:

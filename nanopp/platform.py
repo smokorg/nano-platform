@@ -55,9 +55,7 @@ class Plugin:
     The plugin will be completel removed from the platform on the next garbadge 
     collection cycle.
     """
-    
-    
-    
+
     def activate(self):
         pass
     
@@ -98,7 +96,6 @@ class Platform:
     
     def shutdown(self):
         pass
-
 
 
 class PluginManager:

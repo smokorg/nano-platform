@@ -127,3 +127,12 @@ class BaseLoader(SourceLoader):
     def get_overriden_globals(self):
         glb = {'__import__': create_context_sensitive_import(self.create_context_for_this())}
         return glb
+
+
+class ClassLoader:
+
+    def __init__(self):
+        pass
+
+    def load_class(self, class_name):
+        pass
