@@ -116,15 +116,28 @@ class PluginContainer:
             self.plugin_state = Plugin.STATE_ACTIVE
             self.notify_state_change(Plugin.STATE_ACTIVE)
         except Exception as e:
-                self.logger.error("Activation error in hook: %s. Error: %s" % (hook, e))
+                self.logger.error("Plugin activation error: %s", e)
                 self.plugin_state = Plugin.STATE_DEACTIVATED
                 self.notify_state_change(Plugin.STATE_DEACTIVATED)
 
     def deactivate(self):
-        pass
+        if self.plugin_state is not Plugin.STATE_ACTIVE:
+            raise PluginLifecycleException("Cannot deactivate plugin. Invalid state: %s" % str(self.plugin_state))
+
+        for hook in self.plugin_hooks:
+            try:
+                hook.deactivate()
+            except Exception as e:
+                self.logger.error("Deactivation error in hook %s. Error: %s", hook, e)
+        self.plugin_state = Plugin.STATE_DEACTIVATED
+        self.notify_state_change(Plugin.STATE_DEACTIVATED)
     
     def uninstall(self):
-        pass
+        if self.plugin_state not in [Plugin.STATE_DEACTIVATED, Plugin.STATE_INSTALLED]:
+            raise PluginLifecycleException("Cannot uninstall plugin. Invalid state: %s" % str(self.plugin_state))
+        self.plugin_state = Plugin.STATE_UNINSTALLED
+        self.notify_state_change(Plugin.STATE_UNINSTALLED)
+
     
     def dispose(self):
         pass
