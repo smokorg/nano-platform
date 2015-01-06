@@ -37,12 +37,12 @@ class Plugin:
     STATE_ACTIVE = 0x2
     """ The plugin has been successfully activated.
     
-    At this point, the call to Plugin.activate(...) has been made and no error 
+    At this point, the call to Plugin.activate(...) has been made and no errors 
     were detected.
     """
     
     STATE_DEACTIVATED = 0x3
-    """ The plugin has been deactivated, but it is still available on the platorm.
+    """ The plugin has been deactivated, but it is still available on the platform.
     """
     
     STATE_DISPOSED = 0x4
@@ -68,8 +68,18 @@ class Plugin:
 
 
 class PluginContainer:
+
+    def __init__(self, plugin_ref, resource_loader):
+        self.loader = resource_loader
+        self.plugin_ref = plugin_ref
+        self.dependencies = []
+        self.plugin_hooks = []
+        self.plugin_state = None
+        
+    
     def load(self):
-        pass
+        self.plugin = self.loader.load('plugin:' + self.plugin_ref)
+        self.plugin_state = Plugin.STATE_UNINSTALLED
 
     def install(self):
         pass
