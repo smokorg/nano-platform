@@ -80,6 +80,9 @@ class PluginContainer:
         self.logger = logging.getLogger('nanopp.platform.PluginContainer')
     
     def load(self):
+        if self.plugin_state == Plugin.STATE_DISPOSED:
+            raise PluginLifecycleException("Plugin already disposed")
+
         self.plugin = self.loader.load('plugin:' + self.plugin_ref)
         self.plugin_state = Plugin.STATE_UNINSTALLED
 
@@ -105,6 +108,9 @@ class PluginContainer:
             self.plugin_hooks.append(hook_inst)
 
     def resolve_dependencies(self):
+        pass
+
+    def dispose_dependencies(self):
         pass
     
     def activate(self):
@@ -138,9 +144,13 @@ class PluginContainer:
         self.plugin_state = Plugin.STATE_UNINSTALLED
         self.notify_state_change(Plugin.STATE_UNINSTALLED)
 
-    
     def dispose(self):
-        pass
+        if self.plugin_state is not Plugin.STATE_UNINSTALLED:
+            raise PluginLifecycleException("Cannot dispose plugin. Invalid state: %s" % str(self.plugin_state))
+        self.plugin_state = Plugin.STATE_DISPOSED
+        self.plugin_hooks = None
+        self.dispose_dependencies()
+        self.plugin = None
 
     def notify_state_change(self, state):
         for hook in self.plugin_hooks:
