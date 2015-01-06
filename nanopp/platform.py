@@ -13,6 +13,7 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+from nanopp.tools import Proxy
 
 
 class Plugin:
@@ -49,10 +50,10 @@ class Plugin:
     """ The plugin is ready to be removed from the platform.
     
     This point may have been reached by calling PluginManager.dispose(...) or
-    it may be a result of an error during installtion (such as dependencies that
-    had not been satisfyed).
+    it may be a result of an error during installation (such as dependencies that
+    had not been satisfied).
     
-    The plugin will be completel removed from the platform on the next garbadge 
+    The plugin will be completely removed from the platform on the next garbage
     collection cycle.
     """
 
@@ -64,7 +65,6 @@ class Plugin:
     
     def on_state_change(self, state):
         pass
-    
 
 
 class PluginContainer:
@@ -75,14 +75,31 @@ class PluginContainer:
         self.dependencies = []
         self.plugin_hooks = []
         self.plugin_state = None
-        
+        self.plugin = None
     
     def load(self):
         self.plugin = self.loader.load('plugin:' + self.plugin_ref)
         self.plugin_state = Plugin.STATE_UNINSTALLED
 
     def install(self):
-        pass
+        if self.plugin_state is not Plugin.STATE_UNINSTALLED:
+            raise PluginLifecycleException("Cannot install plugin. Invalid state: %s" % str(self.plugin_state))
+        try:
+            self.resolve_dependencies()
+            self.create_hooks()
+            self.plugin_state = Plugin.STATE_INSTALLED
+        except Exception as e:
+            self.plugin_state = Plugin.STATE_DISPOSED
+            raise e
+
+    def create_hooks(self):
+        manifest = self.plugin.get_manifest()
+        for hook_class_name in manifest.plugin_classes:
+            hook_class = self.loader.load('class:'+hook_class_name)
+            hook_inst = hook_class()
+            if not isinstance(hook_inst, Plugin):
+                hook_inst = Proxy(target=hook_inst)
+            self.plugin_hooks.append(hook_inst)
 
     def resolve_dependencies(self):
         pass
@@ -123,3 +140,11 @@ class PluginManager:
         
     def gc(self):
         pass
+
+
+class PlatformException(Exception):
+    pass
+
+
+class PluginLifecycleException(PlatformException):
+    pass

@@ -42,6 +42,7 @@ def extend(dict_a, dict_b):
     for k, v in dict_b.items():
         dict_a[k] = v
 
+
 def create_context_sensitive_import(context):
     """ Creates context sensitive import function to be used as replacement for the __import__ builtin.
     :param context: the context to be set when calling __import__
