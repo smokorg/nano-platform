@@ -13,6 +13,7 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+import logging
 from nanopp.tools import Proxy
 
 
@@ -76,6 +77,7 @@ class PluginContainer:
         self.plugin_hooks = []
         self.plugin_state = None
         self.plugin = None
+        self.logger = logging.getLogger('nanopp.platform.PluginContainer')
     
     def load(self):
         self.plugin = self.loader.load('plugin:' + self.plugin_ref)
@@ -88,6 +90,7 @@ class PluginContainer:
             self.resolve_dependencies()
             self.create_hooks()
             self.plugin_state = Plugin.STATE_INSTALLED
+            self.notify_state_change(Plugin.STATE_INSTALLED)
         except Exception as e:
             self.plugin_state = Plugin.STATE_DISPOSED
             raise e
@@ -105,8 +108,18 @@ class PluginContainer:
         pass
     
     def activate(self):
-        pass
-        
+        if self.plugin_state is not Plugin.STATE_INSTALLED or self.plugin_state is not  Plugin.STATE_DEACTIVATED:
+            raise PluginLifecycleException("Cannot activate plugin. Invalid state: %s" % str(self.plugin_state))
+        try:
+            for hook in self.plugin_hooks:
+                hook.activate()
+            self.plugin_state = Plugin.STATE_ACTIVE
+            self.notify_state_change(Plugin.STATE_ACTIVE)
+        except Exception as e:
+                self.logger.error("Activation error in hook: %s. Error: %s" % (hook, e))
+                self.plugin_state = Plugin.STATE_DEACTIVATED
+                self.notify_state_change(Plugin.STATE_DEACTIVATED)
+
     def deactivate(self):
         pass
     
@@ -115,6 +128,13 @@ class PluginContainer:
     
     def dispose(self):
         pass
+
+    def notify_state_change(self, state):
+        for hook in self.plugin_hooks:
+            try:
+                hook.on_state_chnage(state)
+            except Exception as e:
+                self.logger.error('Error on state change in hook: %s. Error: %s', hook, e)
     
 
 class Platform:
