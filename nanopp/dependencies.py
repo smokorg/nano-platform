@@ -32,6 +32,12 @@ class DependenciesManager:
         pass
 
 
+class DepNode:
+
+    def __init__(self, dependency, parent=None, children=None):
+        pass
+
+
 class Dependency:
 
     def __init__(self, dep_name, depends_on=None, ref=None):
