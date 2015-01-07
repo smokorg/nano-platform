@@ -32,10 +32,71 @@ class DependenciesManager:
         pass
 
 
-class DepNode:
+class Vertex:
 
-    def __init__(self, dependency, parent=None, children=None):
-        pass
+    def __init__(self, name):
+        self.name = name
+        self.edges = []
+
+    def __str__(self):
+        return "V(%s)" % self.name
+
+    def __repr__(self):
+        return self.__str__()
+
+
+class Edge:
+
+    def __init__(self, head, tail):
+        self.head = head
+        self.tail = tail
+        self.vertices = [head, tail]
+
+    def __str__(self):
+        return "E(%s - %s)" % (self.head.name, self.tail.name)
+
+    def __repr__(self):
+        return self.__str__()
+
+
+class Graph:
+
+    def __init__(self):
+        self.vertices = []
+        self.vertices_by_name = {}
+        self.edges = []
+        self.edges_by_vertex = {}
+
+    def add_vertex(self, vertex):
+        if self.vertices_by_name.get(vertex.name):
+            raise Exception('Vertex %s already added' % vertex.name)
+        self.vertices.append(vertex)
+        self.vertices_by_name[vertex.name] = vertex
+        return vertex
+
+    def create_edge(self, head_vertex, tail_vertex):
+        edge_id = self.__to_edge_id(head_vertex, tail_vertex)
+        if not (self.vertices_by_name.get(head_vertex.name) and self.vertices_by_name.get(tail_vertex.name)):
+            raise Exception("Edge to a vertex not known to this graph")
+        if self.edges_by_vertex.get(edge_id):
+            raise Exception("Edge (%s - %s) already exists" % (head_vertex, tail_vertex))
+        edge = Edge(head=head_vertex, tail=tail_vertex)
+        self.edges_by_vertex[edge_id] = edge
+        self.edges.append(edge)
+        return edge
+
+    @staticmethod
+    def __to_edge_id(head_v, tail_v):
+        return "%s-%s" % (head_v.name, tail_v.name)
+
+    def __str__(self):
+        gs = "Graph: %d vertices, %d edges\n" % (len(self.vertices), len(self.edges))
+        gs += "Vertices: %s\n" % self.vertices
+        gs += "Edges: %s\n" % self.edges
+        return gs
+
+    def __repr__(self):
+        return self.__str__()
 
 
 class Dependency:
@@ -52,3 +113,24 @@ class Dependency:
             if not dep.available:
                 return False
         return True
+
+
+if __name__ == '__main__':
+    graph = Graph()
+
+    a = graph.add_vertex(Vertex(name='A'))
+    b = graph.add_vertex(Vertex(name='B'))
+    c = graph.add_vertex(Vertex(name='C'))
+    d = graph.add_vertex(Vertex(name='D'))
+    e = graph.add_vertex(Vertex(name='E'))
+
+    graph.create_edge(a, b)
+    graph.create_edge(a, c)
+    graph.create_edge(a, e)
+    graph.create_edge(b, d)
+    graph.create_edge(b, e)
+    graph.create_edge(c, e)
+
+    print(graph)
+
+
