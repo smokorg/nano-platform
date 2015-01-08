@@ -53,7 +53,7 @@ class Edge:
         self.vertices = [head, tail]
 
     def __str__(self):
-        return "E(%s - %s)" % (self.head.name, self.tail.name)
+        return "E(%s -> %s)" % (self.head.name, self.tail.name)
 
     def __repr__(self):
         return self.__str__()
