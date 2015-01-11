@@ -57,6 +57,23 @@ class Vertex(Markable):
     def __repr__(self):
         return self.__str__()
 
+    def add_edge(self, edge):
+        self.edges.append(edge)
+
+    def out_edges(self):
+        oe = []
+        for e in self.edges:
+            if e.head is not self:
+                oe.append(e)
+        return oe
+
+    def in_edges(self):
+        ie = []
+        for e in self.edges:
+            if e.head is self:
+                ie.append(e)
+        return ie
+
 
 class Edge(Markable):
 
@@ -67,7 +84,7 @@ class Edge(Markable):
         super().__init__()
 
     def __str__(self):
-        return "E(%s -> %s)" % (self.head.name, self.tail.name)
+        return "E(%s -> %s)" % (self.tail.name, self.head.name)
 
     def __repr__(self):
         return self.__str__()
@@ -88,7 +105,7 @@ class Graph:
         self.vertices_by_name[vertex.name] = vertex
         return vertex
 
-    def create_edge(self, head_vertex, tail_vertex):
+    def create_edge(self, tail_vertex, head_vertex):
         edge_id = self.__to_edge_id(head_vertex, tail_vertex)
         if not (self.vertices_by_name.get(head_vertex.name) and self.vertices_by_name.get(tail_vertex.name)):
             raise Exception("Edge to a vertex not known to this graph")
@@ -97,6 +114,8 @@ class Graph:
         edge = Edge(head=head_vertex, tail=tail_vertex)
         self.edges_by_vertex[edge_id] = edge
         self.edges.append(edge)
+        head_vertex.add_edge(edge)
+        tail_vertex.add_edge(edge)
         return edge
 
     @staticmethod
@@ -145,13 +164,13 @@ class Graph:
             if not vertex.marked():
                 out_edges = vertex.out_edges()
                 for edge in out_edges:
-                    if not edge.tail.marked():
-                        stack.append(edge.tail)
+                    if not edge.head.marked():
+                        stack.append(edge.head)
                 vertex.mark('DISCOVERED')
                 return vertex
             return None
 
-        def next(self):
+        def __next__(self):
             if len(self.stack):
                 vertex = None
                 while vertex is None:
@@ -167,7 +186,7 @@ class Graph:
                 if vertex.marked():
                     raise StopIteration
                 self.stack.append(vertex)
-                return self.next()
+                return self.__next__()
 
             raise StopIteration()
 
@@ -212,5 +231,8 @@ if __name__ == '__main__':
     graph.create_edge(c, e)
 
     print(graph)
+
+    for v in graph:
+        print(v)
 
 
