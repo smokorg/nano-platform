@@ -32,11 +32,24 @@ class DependenciesManager:
         pass
 
 
-class Vertex:
+class Markable:
+
+    def __init__(self):
+        self.__mark = None
+
+    def mark(self, value):
+        self.__mark = value
+
+    def marked(self):
+        return self.__mark
+
+
+class Vertex(Markable):
 
     def __init__(self, name):
         self.name = name
         self.edges = []
+        super().__init__()
 
     def __str__(self):
         return "V(%s)" % self.name
@@ -45,12 +58,13 @@ class Vertex:
         return self.__str__()
 
 
-class Edge:
+class Edge(Markable):
 
     def __init__(self, head, tail):
         self.head = head
         self.tail = tail
         self.vertices = [head, tail]
+        super().__init__()
 
     def __str__(self):
         return "E(%s -> %s)" % (self.head.name, self.tail.name)
@@ -97,6 +111,72 @@ class Graph:
 
     def __repr__(self):
         return self.__str__()
+
+    class GraphIterator:
+
+        def __init__(self, graph):
+            self.graph = graph
+            self.stack = []
+            self.current_vertex = 0
+
+        def __iter__(self):
+            return self
+
+        """
+        DFS traversal:
+
+        s = [] # stack
+        for v in vertices:
+            if not v.marked():
+                s.append(n) # push to stack
+                while len(s):
+                    vx = s.pop()
+                    if not vx.marked():
+                        vx.mark('discovered')
+                        yield vx
+                    for edg in vx.out_edges():
+                        if not edg.tail.marked():
+                            s.append(edg.tail)
+        """
+
+        @staticmethod
+        def __next_from_stack__(stack):
+            vertex = stack.pop()
+            if not vertex.marked():
+                out_edges = vertex.out_edges()
+                for edge in out_edges:
+                    if not edge.tail.marked():
+                        stack.append(edge.tail)
+                vertex.mark('DISCOVERED')
+                return vertex
+            return None
+
+        def next(self):
+            if len(self.stack):
+                vertex = None
+                while vertex is None:
+                    vertex = self.__next_from_stack__(self.stack)
+                return vertex
+
+            if self.current_vertex < len(self.graph.vertices):
+                vertex = self.graph.vertices[self.current_vertex]
+                while vertex.marked():
+                    self.current_vertex += 1
+                    if self.current_vertex < len(self.graph.vertices):
+                        vertex = self.graph.vertices[self.current_vertex]
+                if vertex.marked():
+                    raise StopIteration
+                self.stack.append(vertex)
+                return self.next()
+
+            raise StopIteration()
+
+    # Graph iterator - DFS traversal
+    def __iter__(self):
+        return Graph.GraphIterator(self.__clone__())
+
+    def __clone__(self):
+        return self
 
 
 class Dependency:
