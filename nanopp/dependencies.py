@@ -23,12 +23,54 @@ class DependenciesManager:
         self.dependencies = {}
 
     def add_dependency(self, dep_id, depends_on, ref=None):
-        pass
+        if self.dependencies.get(dep_id):
+            raise Exception('Duplicate dependency definition. Dependency %s already added.' % dep_id)
+        dep = self.create_dependency_instance(dep_id, depends_on, ref)
+        self.dependencies[dep_id] = dep
+
+        if depends_on:
+            for dep_name in depends_on:
+                existing_dep = self.dependencies.get(dep_name)
+                if existing_dep:
+                    existing_dep.dependants.append(dep)
+
+    def create_dependency_instance(self, dep_id, depends_on, ref=None):
+        dep = Dependency(dep_name=dep_id, depends_on=depends_on, ref=ref)
+        return dep
 
     def build_dependency_graph(self):
-        pass
+        graph = Graph()
+        edges = []
+        for dep_id, dependency in self.dependencies.items():
+            v = Vertex(dep_id)
+            graph.add_vertex(v)
+            for d in dependency.dependencies:
+                edges.append((dep_id, d.name))
+
+        for head, tail in edges:
+            head_v = graph.get_vertex(head) or graph.add_vertex(Vertex(head))
+            tail_v = graph.get_vertex(tail) or graph.add_vertex(Vertex(tail))
+
+            graph.create_edge(tail_vertex=tail_v, head_vertex=head_v)
+
+        return graph
 
     def get_dependency(self, dep_id):
+        return self.dependencies.get(dep_id)
+
+    def get_install_order(self):
+        graph = self.build_dependency_graph()
+        dependencies_order = []
+        for vertex in graph.vertices:
+            out_e = vertex.out_edges()
+            # Locate a vertex that has no edges pointing outwards
+            if not out_e or len(out_e) == 0:
+                # start here
+                sub_ordered_dependencies = self.__get_install_order_sub__(graph, vertex)
+                dependencies_order = dependencies_order + sub_ordered_dependencies
+        return dependencies_order
+
+    def __get_install_order_sub__(self, graph, vertex):
         pass
 
 
@@ -117,6 +159,9 @@ class Graph:
         head_vertex.add_edge(edge)
         tail_vertex.add_edge(edge)
         return edge
+
+    def get_vertex(self, v_name):
+        return self.vertices_by_name.get(v_name)
 
     @staticmethod
     def __to_edge_id(head_v, tail_v):
