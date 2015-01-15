@@ -75,28 +75,31 @@ class DependenciesManager:
         self.__traverse__(graph, vertex, deps_in_order)
         return deps_in_order
 
-    def __traverse__(self, graph, vertex, dep_arr):
-        unmarked_out_edges = 0
-        visit_vertices = []
-        print(" => Visiting vertex: %s" % vertex)
+    @staticmethod
+    def __count_unmarked_out_edges__(vertex):
+        uoe_count = 0
+
         for edge in vertex.out_edges():
             if not edge.marked():
-                unmarked_out_edges += 1
-                #visit_vertices.append(edge.head)
-        if not unmarked_out_edges and not vertex.marked():
+                uoe_count += 1
+
+        return uoe_count
+
+    def __traverse__(self, graph, vertex, dep_arr):
+        if vertex.marked():
+            return
+        unm_oe_count = self.__count_unmarked_out_edges__(vertex)
+        visit_vertices = []
+        if unm_oe_count == 0:
             dep_arr.append(vertex)
             vertex.mark('added')
             for edge in vertex.in_edges():
-                edge.mark('visited')
+                edge.mark('resolved')
                 if not edge.tail.marked():
                     visit_vertices.append(edge.tail)
 
         for visit_vertex in visit_vertices:
             self.__traverse__(graph, visit_vertex, dep_arr)
-
-        if not vertex.marked():
-            dep_arr.append(vertex)
-            vertex.mark('added')
 
 
 class Markable:
@@ -253,6 +256,8 @@ class Graph:
                     self.current_vertex += 1
                     if self.current_vertex < len(self.graph.vertices):
                         vertex = self.graph.vertices[self.current_vertex]
+                    else:
+                        raise StopIteration
                 if vertex.marked():
                     raise StopIteration
                 self.stack.append(vertex)
