@@ -272,6 +272,33 @@ class Graph:
     def __clone__(self):
         return self
 
+    def find_circular_rings(self):
+        rings = []
+        graph = self.__clone__()
+        for vertex in graph.vertices:
+            self.__traverse_cr__(vertex, [], {}, rings)
+        return rings
+
+    def __traverse_cr__(self, vertex, backtrack, visited, rings):
+        if vertex.marked():
+            return
+        vertex.mark('visited')
+        backtrack.append(vertex)
+        visited[vertex.name] = vertex
+        for edge in vertex.out_edges():
+            if visited.get(edge.head.name):
+                # cycle detected
+                ring = []
+                i = 0
+                for v in backtrack:
+                    if v == edge.head:
+                        ring = backtrack[i:]
+                        break
+                    i += 1
+                rings.append(ring)
+            if not edge.head.marked():
+                self.__traverse_cr__(edge.head, backtrack, visited, rings)
+
 
 class Dependency:
 
