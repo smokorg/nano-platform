@@ -68,7 +68,7 @@ class DependenciesManager:
                 # start here
                 sub_ordered_dependencies = self.__get_install_order_sub__(graph, vertex)
                 dependencies_order = dependencies_order + sub_ordered_dependencies
-        return dependencies_order
+        return [n.name for n in dependencies_order]
 
     def __get_install_order_sub__(self, graph, vertex):
         deps_in_order = []
