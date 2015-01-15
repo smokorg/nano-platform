@@ -14,6 +14,7 @@ from io import StringIO
 
 from nanopp.plugins.support import PluginManifestParser
 
+
 class TestPluginManifestParser(unittest.TestCase):
 
     def setUp(self):

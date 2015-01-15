@@ -45,7 +45,7 @@ class DependenciesManager:
             v = Vertex(dep_id)
             graph.add_vertex(v)
             for d in dependency.dependencies:
-                edges.append((dep_id, d.name))
+                edges.append((d, dep_id))
 
         for head, tail in edges:
             head_v = graph.get_vertex(head) or graph.add_vertex(Vertex(head))
@@ -71,7 +71,32 @@ class DependenciesManager:
         return dependencies_order
 
     def __get_install_order_sub__(self, graph, vertex):
-        pass
+        deps_in_order = []
+        self.__traverse__(graph, vertex, deps_in_order)
+        return deps_in_order
+
+    def __traverse__(self, graph, vertex, dep_arr):
+        unmarked_out_edges = 0
+        visit_vertices = []
+        print(" => Visiting vertex: %s" % vertex)
+        for edge in vertex.out_edges():
+            if not edge.marked():
+                unmarked_out_edges += 1
+                #visit_vertices.append(edge.head)
+        if not unmarked_out_edges and not vertex.marked():
+            dep_arr.append(vertex)
+            vertex.mark('added')
+            for edge in vertex.in_edges():
+                edge.mark('visited')
+                if not edge.tail.marked():
+                    visit_vertices.append(edge.tail)
+
+        for visit_vertex in visit_vertices:
+            self.__traverse__(graph, visit_vertex, dep_arr)
+
+        if not vertex.marked():
+            dep_arr.append(vertex)
+            vertex.mark('added')
 
 
 class Markable:
@@ -267,17 +292,19 @@ if __name__ == '__main__':
     c = graph.add_vertex(Vertex(name='C'))
     d = graph.add_vertex(Vertex(name='D'))
     e = graph.add_vertex(Vertex(name='E'))
+    f = graph.add_vertex(Vertex(name='F'))
 
     graph.create_edge(a, b)
-    graph.create_edge(a, c)
     graph.create_edge(a, e)
-    graph.create_edge(b, d)
+    graph.create_edge(a, d)
     graph.create_edge(b, e)
     graph.create_edge(c, e)
+    graph.create_edge(c, f)
+    graph.create_edge(c, d)
+    graph.create_edge(f, d)
+    graph.create_edge(d, e)
 
     print(graph)
 
     for v in graph:
         print(v)
-
-
