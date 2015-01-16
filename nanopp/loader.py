@@ -132,8 +132,19 @@ class BaseLoader(SourceLoader):
 
 class ClassLoader:
 
-    def __init__(self):
-        pass
+    def __init__(self, import_fn):
+        self.import_fn = import_fn
 
     def load_class(self, class_name):
-        pass
+        if not class_name:
+            raise ValueError('Class name must be given')
+        package, dot, clazz = class_name.rpartition('.')
+        if not package:
+            # FIXME: Research what happens if classes with no package are loaded
+            raise ValueError('Unable to load top-level classes')
+        loaded_module = self.import_fn(package, globals(), locals(), [clazz])
+        if not loaded_module:
+            raise Exception('Module not found: %s' % package)
+        return getattr(loaded_module, clazz)
+
+
