@@ -80,3 +80,28 @@ class TestGraph(TestCase):
         self.assertTrue(len(rings) == 2)
         self.assertTrue([a, b, c], rings[0])
         self.assertTrue([e, g, f], rings[1])
+
+    def test_find_circular_rings_2rings_mangled(self):
+        graph = Graph()
+        a = graph.add_vertex(Vertex('A'))
+        b = graph.add_vertex(Vertex('B'))
+        c = graph.add_vertex(Vertex('C'))
+        d = graph.add_vertex(Vertex('D'))
+        e = graph.add_vertex(Vertex('E'))
+        f = graph.add_vertex(Vertex('F'))
+        g = graph.add_vertex(Vertex('G'))
+
+        graph.create_edge(a, b)
+        graph.create_edge(b, c)
+        graph.create_edge(c, d)
+        graph.create_edge(d, e)
+        graph.create_edge(e, a)
+        graph.create_edge(e, f)
+        graph.create_edge(e, g)
+        graph.create_edge(f, d)
+
+        rings = graph.find_circular_rings()
+        self.assertTrue(len(rings) == 2)
+        self.assertTrue([a, b, c, d, e], rings[0])
+        self.assertTrue([d, e, f], rings[1])
+
