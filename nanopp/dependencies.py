@@ -299,6 +299,9 @@ class Graph:
             if not edge.head.marked():
                 self.__traverse_cr__(edge.head, backtrack, visited, rings)
 
+    def is_circular(self):
+        return len(self.find_circular_rings()) > 0
+
 
 class Dependency:
 
