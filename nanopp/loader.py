@@ -19,6 +19,7 @@
 from importlib.abc import SourceLoader
 import re
 import threading
+from nanopp.resources import ProtocolHandler
 
 __local_context = threading.local()
 __original_import__ = __import__
@@ -148,3 +149,11 @@ class ClassLoader:
         return getattr(loaded_module, clazz)
 
 
+class ClassProtocolHandler(ProtocolHandler):
+
+    def __init__(self, resource_loader):
+        super(ClassProtocolHandler, self).__init__('class', resource_loader)
+        self.class_loader = ClassLoader(import_fn=__import__)
+
+    def load(self, path, *args, **kwargs):
+        return self.class_loader.load_class(path)
