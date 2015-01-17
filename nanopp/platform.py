@@ -14,6 +14,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import logging
+from nanopp.dependencies import DependenciesManager
 from nanopp.tools import Proxy
 
 
@@ -73,6 +74,8 @@ class PluginContainer:
     def __init__(self, plugin_ref, resource_loader):
         self.loader = resource_loader
         self.plugin_ref = plugin_ref
+        self.plugin_id = None
+        self.manifest = None
         self.dependencies = []
         self.plugin_hooks = []
         self.plugin_state = None
@@ -84,6 +87,8 @@ class PluginContainer:
             raise PluginLifecycleException("Plugin already disposed")
 
         self.plugin = self.loader.load('plugin:' + self.plugin_ref)
+        self.manifest = self.plugin.get_manifest()
+        self.plugin_id = self.manifest.id
         self.plugin_state = Plugin.STATE_UNINSTALLED
 
     def install(self):
@@ -169,7 +174,33 @@ class Platform:
 
 
 class PluginManager:
-    def install_plugin(self, plugin_ref):
+
+    def __init__(self, resource_loader):
+        self.resource_loader = resource_loader
+        self.dependencies_manager = DependenciesManager()
+        self.plugins_by_ref = {}
+        self.plugins_by_id = {}
+
+    def add_plugin(self, plugin_ref):
+        if self.plugins_by_ref.get(plugin_ref):
+            raise Exception('Plugin with reference %s already added' % plugin_ref)
+        pc = PluginContainer(plugin_ref, self.resource_loader)
+        pc.load()
+        if self.plugins_by_id.get(pc.plugin_id):
+            self.reload_plugin(pc.plugin_id, pc)
+        else:
+            self.plugins_by_ref[plugin_ref] = pc
+            self.plugins_by_id[pc.plugin_id] = pc
+
+    def reload_plugin(self, plugin_id, plugin_rc):
+        pass
+
+    def install_plugin(self, plugin_id):
+        # 1. Load the plugin resource
+        # 2. Add to dependencies manager
+        # 2. Register Finder/Loader for this particular plugin
+        # 3. Load the main plugin classes
+        #
         pass
 
     def activate_plugin(self, plugin_id):
@@ -183,6 +214,27 @@ class PluginManager:
         
     def gc(self):
         pass
+
+    def get_plugin(self, plugin_id):
+        plugin = self.plugins_by_id.get(plugin_id)
+        if not plugin:
+            raise Exception('Plugin with id %s is not registered' % plugin_id)
+        return plugin
+
+    def build_dependencies(self, plugin_container):
+        # 1. Requires vs. Exports entries
+        dependencies = set()
+        for r_e in plugin_container.manifest.requires:
+            for plugin_id, pc in self.plugins_by_id.items():
+                for exp_e in pc.manifest.exports:
+                    if exp_e.satisfies(r_e):
+                        dependencies.add(plugin_id)
+
+        # 2. Add all explicit plugins mentioned in the plugin manifest
+        for plugin_id in plugin_container.manifest.exports:
+            dependencies.add(plugin_id)
+        dependencies = [d for d in dependencies]
+        self.dependencies_manager.add_dependency(plugin_container.pluugin_id, dependencies, plugin_container)
 
 
 class PlatformException(Exception):

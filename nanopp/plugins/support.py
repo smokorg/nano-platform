@@ -64,6 +64,9 @@ class ExportsEntry(Entry):
         Entry.__init__(self, entry_name, is_package)
         self.version = export_version
 
+    def satisfies(self, requires_entry):
+        pass
+
 
 def check_min_version(version, min_version, incl):
     if min_version is None:

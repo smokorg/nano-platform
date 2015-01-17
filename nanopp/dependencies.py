@@ -34,6 +34,9 @@ class DependenciesManager:
                 if existing_dep:
                     existing_dep.dependants.append(dep)
 
+    def delete_dependency(self, dep_id):
+        pass
+
     def create_dependency_instance(self, dep_id, depends_on, ref=None):
         dep = Dependency(dep_name=dep_id, depends_on=depends_on, ref=ref)
         return dep
