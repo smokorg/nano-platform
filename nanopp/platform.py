@@ -180,6 +180,9 @@ class PluginManager:
         self.dependencies_manager = DependenciesManager()
         self.plugins_by_ref = {}
         self.plugins_by_id = {}
+        self.all_exports = {}
+        self.all_requires = {}
+        self.dependencies_built = False
 
     def add_plugin(self, plugin_ref):
         if self.plugins_by_ref.get(plugin_ref):
@@ -192,8 +195,14 @@ class PluginManager:
             self.plugins_by_ref[plugin_ref] = pc
             self.plugins_by_id[pc.plugin_id] = pc
 
-    def reload_plugin(self, plugin_id, plugin_rc):
-        pass
+    def reload_plugin(self, plugin_id, plugin_container):
+        old_plugin = self.plugins_by_id[plugin_id];
+        del self.plugins_by_id[plugin_id]
+        del self.plugins_by_ref[old_plugin.plugin_ref]
+        if self.dependencies_built:
+            self.__cleanup_dependencies__(old_plugin)
+        self.__build_dependecies__(plugin_container)
+         
 
     def install_plugin(self, plugin_id):
         # 1. Load the plugin resource
@@ -220,34 +229,48 @@ class PluginManager:
         if not plugin:
             raise Exception('Plugin with id %s is not registered' % plugin_id)
         return plugin
-
+    
+    def __build_dependecies__(self, plugin_container):
+        plugin_id = plugin_container.plugin_id
+        dependencies = []
+        for imp in plugin_container.manifest.requires:
+            satisfied = False
+            self.all_requires[imp] = plugin_container
+            for export, p_c in self.all_exports.items():
+                if export.satisfies(imp):
+                    dependencies.append(p_c.plugin_id)
+                    satisfied = True
+                    break
+            if not satisfied:
+                raise UnsatisfiedDependencyException('Required module <%s> stated in plugin [%s] cannot be satisfied.' % (imp, plugin_id))
+        
+        for plugin_dep in plugin_container.manifest.requires_plugins:
+            req_plugin = self.__locate_plugin_for_import__(plugin_dep)
+            if not req_plugin:
+                raise UnsatisfiedDependencyException('Required plugin <%s> is not available' % plugin_dep)
+            dependencies.append(req_plugin.plugin_id)
+        
+        self.dependencies_manager.add_dependency(plugin_id, dependencies, plugin_container)
+    
     def build_dependencies(self, plugin_container):
         # load all exports
-        exports = {}
         for plugin_id, pc in self.plugins_by_id.items():
             for export in pc.manifest.exports:
-                exports[export] = pc
+                self.all_exports[export] = pc
                 
         # FIXME: This could not possibly be worse
         for plugin_id, pc in self.plugins_by_id.items():
-            dependencies = []
-            for imp in pc.manifest.requires:
-                satisfied = False
-                for export, plugin_container in exports.items():
-                    if export.satisfies(imp):
-                        dependencies.append(plugin_container.plugin_id)
-                        satisfied = True
-                        break
-                if not satisfied:
-                    raise UnsatisfiedDependencyException('Required module <%s> stated in plugin [%s] cannot be satisfied.' % (imp, plugin_id))
-            
-            for plugin_dep in pc.manifest.requires_plugins:
-                req_plugin = self.__locate_plugin_for_import__(plugin_dep)
-                if not req_plugin:
-                    raise UnsatisfiedDependencyException('Required plugin <%s> is not available' % plugin_dep)
-                dependencies.append(req_plugin.plugin_id)
-            
-            self.dependencies_manager.add_dependency(plugin_id, dependencies, pc)
+            self.__build_dependecies__(pc)
+    
+    def __cleanup_dependencies__(self, plugin_container):
+        for export in plugin_container.manifest.exports:
+            if self.all_exports.get(export):
+                del self.all_exports[export]
+        for imp in plugin_container.requires:
+            if self.all_requires.get(imp):
+                del self.all_requires[imp]
+        self.dependencies_manager.delete_dependency(plugin_container.plugin_id)
+        
     
     def __locate_plugin_for_import__(self, imp):
         for plugin_id, plugin_container in self.plugins_by_id.items():
