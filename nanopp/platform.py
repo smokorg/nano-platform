@@ -71,9 +71,10 @@ class Plugin:
 
 class PluginContainer:
 
-    def __init__(self, plugin_ref, resource_loader):
+    def __init__(self, plugin_ref, resource_loader, plugin_manager):
         self.loader = resource_loader
         self.plugin_ref = plugin_ref
+        self.plugin_manager = plugin_manager
         self.plugin_id = None
         self.manifest = None
         self.dependencies = []
@@ -163,7 +164,9 @@ class PluginContainer:
                 hook.on_state_chnage(state)
             except Exception as e:
                 self.logger.error('Error on state change in hook: %s. Error: %s', hook, e)
-    
+
+    def get_environ(self):
+        pass
 
 class Platform:
     def start(self):
@@ -175,8 +178,9 @@ class Platform:
 
 class PluginManager:
 
-    def __init__(self, resource_loader):
+    def __init__(self, resource_loader, plugin_finder):
         self.resource_loader = resource_loader
+        self.plugin_finder = plugin_finder
         self.dependencies_manager = DependenciesManager()
         self.plugins_by_ref = {}
         self.plugins_by_id = {}
@@ -187,7 +191,7 @@ class PluginManager:
     def add_plugin(self, plugin_ref):
         if self.plugins_by_ref.get(plugin_ref):
             raise Exception('Plugin with reference %s already added' % plugin_ref)
-        pc = PluginContainer(plugin_ref, self.resource_loader)
+        pc = PluginContainer(plugin_ref, self.resource_loader, self)
         pc.load()
         if self.plugins_by_id.get(pc.plugin_id):
             self.reload_plugin(pc.plugin_id, pc)
@@ -196,7 +200,7 @@ class PluginManager:
             self.plugins_by_id[pc.plugin_id] = pc
 
     def reload_plugin(self, plugin_id, plugin_container):
-        old_plugin = self.plugins_by_id[plugin_id];
+        old_plugin = self.plugins_by_id[plugin_id]
         del self.plugins_by_id[plugin_id]
         del self.plugins_by_ref[old_plugin.plugin_ref]
         if self.dependencies_built:
@@ -208,8 +212,9 @@ class PluginManager:
         # 2. Add to dependencies manager
         # 2. Register Finder/Loader for this particular plugin
         # 3. Load the main plugin classes
-        #
-        pass
+        plugin = self.get_plugin(plugin_id)
+        self.plugin_finder.add_plugin(plugin)
+
 
     def activate_plugin(self, plugin_id):
         pass

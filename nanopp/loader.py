@@ -129,8 +129,13 @@ class BaseLoader(SourceLoader):
         extend(module.__dict__, self.get_overriden_globals())
         return SourceLoader.exec_module(self, module)
 
+    def get_environ(self):
+        return {}
+
     def get_overriden_globals(self):
         glb = {'__import__': create_context_sensitive_import(self.create_context_for_this())}
+        env = self.get_environ()
+        glb.update(env)
         return glb
 
 
@@ -193,6 +198,8 @@ class PluginLoader(BaseLoader):
 
         return self.plugin_container.plugin.read_resource(path, True).read()
 
+    def get_environ(self):
+        return self.plugin_container.get_environ()
 
 class ClassLoader:
 
