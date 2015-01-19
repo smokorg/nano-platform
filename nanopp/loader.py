@@ -20,6 +20,7 @@ from abc import abstractclassmethod, abstractmethod
 from importlib.abc import SourceLoader
 import re
 import threading
+import sys
 from nanopp.resources import ProtocolHandler
 
 __local_context = threading.local()
@@ -165,16 +166,12 @@ class PlatformPluginsFinder(BaseFinder):
         loader_entries, plugin_container = self.plugins.get(plugin_id)
         if plugin_container:
             del self.plugins[plugin_id]
-            indices = []
-            i = 0
-            for le in loader_entries:
-                for entry in self.loader_entries:
-                    if entry == le:
-                        indices.append(i)
-                    i += 1
 
-            for i in indices:
-                self.loader_entries.remove(i)
+            for le in loader_entries:
+                try:
+                    self.loader_entries.remove(le)
+                except ValueError:
+                    pass
 
 
 class PluginLoader(BaseLoader):
@@ -223,3 +220,14 @@ class ClassProtocolHandler(ProtocolHandler):
 
     def load(self, path, *args, **kwargs):
         return self.class_loader.load_class(path)
+
+
+def register_finder(finder):
+    sys.meta_path.insert(0, finder)
+
+
+def unregister_finder(finder):
+    try:
+        sys.meta_path.remove(finder)
+    except ValueError:
+        pass
