@@ -202,7 +202,6 @@ class PluginManager:
         if self.dependencies_built:
             self.__cleanup_dependencies__(old_plugin)
         self.__build_dependecies__(plugin_container)
-         
 
     def install_plugin(self, plugin_id):
         # 1. Load the plugin resource
@@ -252,7 +251,7 @@ class PluginManager:
         
         self.dependencies_manager.add_dependency(plugin_id, dependencies, plugin_container)
     
-    def build_dependencies(self, plugin_container):
+    def build_dependencies(self):
         # load all exports
         for plugin_id, pc in self.plugins_by_id.items():
             for export in pc.manifest.exports:
@@ -270,8 +269,7 @@ class PluginManager:
             if self.all_requires.get(imp):
                 del self.all_requires[imp]
         self.dependencies_manager.delete_dependency(plugin_container.plugin_id)
-        
-    
+
     def __locate_plugin_for_import__(self, imp):
         for plugin_id, plugin_container in self.plugins_by_id.items():
             if imp.name == plugin_id and imp.version_in_range(plugin_container.manifest.version):

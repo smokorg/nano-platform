@@ -16,6 +16,7 @@
 
 
 # base PEP-302 finder
+from abc import abstractclassmethod, abstractmethod
 from importlib.abc import SourceLoader
 import re
 import threading
@@ -72,7 +73,7 @@ class BaseFinder:
         return None
 
     def add_loader(self, loader_entry):
-        self.loader_entries.clear(loader_entry)
+        self.loader_entries.append(loader_entry)
 
     def add_restricted_paths(self, path_patterns):
         self.add_loader(LoaderEntry(RestrictedEntryLoader(), path_patterns))
@@ -118,6 +119,7 @@ class BaseLoader(SourceLoader):
     def get_current_context(self):
         return get_from_context(IMPORT_CONTEXT)
 
+    @abstractmethod
     def create_context_for_this(self):
         pass
 
@@ -129,6 +131,70 @@ class BaseLoader(SourceLoader):
     def get_overriden_globals(self):
         glb = {'__import__': create_context_sensitive_import(self.create_context_for_this())}
         return glb
+
+
+class PlatformPluginsFinder(BaseFinder):
+
+    def __init__(self, restricted_modules):
+        super(PlatformPluginsFinder).__init__()
+        self.plugins = {}
+        restricted_modules = restricted_modules or []
+        for restricted_path in restricted_modules:
+            self.add_restricted_paths(restricted_path)
+
+    def add_plugin(self, plugin_container):
+        if self.plugins.get(plugin_container.plugin_id):
+            raise Exception('Plugin %s already present' % plugin_container.plugin_id)
+        loader_entries = self.create_loader_entries(plugin_container)
+        self.plugins[plugin_container.plugin_id] = (loader_entries, plugin_container)
+        for loader_entry in loader_entries:
+            self.add_loader(loader_entry)
+
+    def create_loader_entries(self, plugin_container):
+        entries = []
+        loader = self.create_loader(plugin_container)
+        for export in plugin_container.manifest.exports:
+            entries.append(export.name)
+
+        return [LoaderEntry(loader=loader, path_patterns=entries)]
+
+    def create_loader(self, plugin_container):
+        return PluginLoader(plugin_container=plugin_container)
+
+    def remove_plugin(self, plugin_id):
+        loader_entries, plugin_container = self.plugins.get(plugin_id)
+        if plugin_container:
+            del self.plugins[plugin_id]
+            indices = []
+            i = 0
+            for le in loader_entries:
+                for entry in self.loader_entries:
+                    if entry == le:
+                        indices.append(i)
+                    i += 1
+
+            for i in indices:
+                self.loader_entries.remove(i)
+
+
+class PluginLoader(BaseLoader):
+
+    def __init__(self, plugin_container):
+        self.plugin_container = plugin_container
+
+    def create_context_for_this(self):
+        return self.plugin_container.plugin_id
+
+    def get_filename(self, fullname):
+        if not self.plugin_container.plugin.resource_exists(fullname):
+            raise ImportError
+        return fullname
+
+    def get_data(self, path):
+        if not self.plugin_container.plugin.resource_exist(path):
+            return None
+
+        return self.plugin_container.plugin.read_resource(path, True).read()
 
 
 class ClassLoader:
