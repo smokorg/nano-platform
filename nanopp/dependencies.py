@@ -322,6 +322,35 @@ class Dependency:
         return True
 
 
+class ServiceContext:
+    
+    def __init__(self):
+        self.services = {}
+        self.dependencies = []
+        self.dependencies_by_name = {}
+    
+    def __create_service_dependency__(self, srvc_name, dependencies, definition):
+        deps = []
+        for dep_name in dependencies:
+            dep = self.dependencies_by_name.get(dep_name)
+            if not dep:
+                dep = Dependency(dep_name, [], None)
+            deps.append(dep)
+
+    def service(self, name, dependencies, definition):
+        srv_dep = Dependency()
+    
+    def locate_service(self, name, on_available, on_removed):
+        pass
+    
+    def locate_services(self, services, on_all_available, on_removed, on_all_removed):
+        pass
+    
+    def remove_service(self, name):
+        pass
+     
+
+
 if __name__ == '__main__':
     graph = Graph()
 
