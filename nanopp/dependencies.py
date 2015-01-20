@@ -322,26 +322,96 @@ class Dependency:
         return True
 
 
+class ServiceDependency(Dependency):
+
+    def __init__(self, service_name, depends_on, factory=None):
+        super(ServiceDependency, self).__init__(dep_name=service_name, depends_on=depends_on)
+        self.factory = factory
+
+    def make_available(self):
+        if not (self.ref or self.factory):
+            raise Exception('Service instance nor the factory method defined')
+        if not self.ref:
+            self.ref = self.make_service_instance()
+
+    def make_service_instance(self):
+        if not self.factory:
+            raise Exception('Factory method not defined for this service: %s' % self.name)
+        args = self.get_dependencies()
+        return self.factory(*args)
+
+    def get_dependencies(self):
+        return [d.ref for d in self.dependencies]
+
+
 class ServiceContext:
     
     def __init__(self):
         self.services = {}
-        self.dependencies = []
-        self.dependencies_by_name = {}
+        self.avail_listeners = {}
+        self.remove_listeners = {}
     
-    def __create_service_dependency__(self, srvc_name, dependencies, definition):
+    def __create_service_dependency__(self, srvc_name, dependencies, factory):
         deps = []
-        for dep_name in dependencies:
-            dep = self.dependencies_by_name.get(dep_name)
-            if not dep:
-                dep = Dependency(dep_name, [], None)
-            deps.append(dep)
+        srvc_dependency = self.__get_service_dep__(srvc_name, factory)
 
-    def service(self, name, dependencies, definition):
-        srv_dep = Dependency()
+        for dep in dependencies:
+            sd = self.__get_service_dep__(dep)
+            deps.append(sd)
+            if srvc_dependency not in sd.dependants:
+                sd.dependants.append(srvc_dependency)
+        srvc_dependency.dependencies = dependencies
+        return srvc_dependency
+
+    def __get_service_dep__(self, name, factory=None):
+        dep = self.services.get(name)
+        if not dep:
+            dep = ServiceDependency(service_name=name, depends_on=[], factory=factory)
+            self.services[name] = dep
+        if not dep.factory:
+            dep.factory = factory
+        return dep
+
+    def service(self, name, dependencies, factory):
+        srv_dep = self.__create_service_dependency__(name, dependencies, factory)
+        if not self.services.get(name):
+            self.services[name] = srv_dep
+        self.__check_available__(srv_dep)
+
+    def __triger_available__(self, name, instance):
+        pass
+
+    def __triger_removed__(self, name, instance):
+        pass
+
+    def __check_available__(self, srv_dep):
+        all_available = True
+        for dep in srv_dep.dependencies:
+            if not dep.available:
+                all_available = False
+                break
+        if all_available:
+            # notify the listeners
+            # create the service itself
+            srv_dep.make_service_instance()
+            self.__triger_available__(srv_dep.name, srv_dep.ref)
+
+            # notify dependants
+            for dpd in srv_dep.dependants:
+                self.__check_available__(dpd)
     
     def locate_service(self, name, on_available, on_removed):
-        pass
+        svc_dep = self.services.get(name)
+        if svc_dep:
+            if svc_dep.available:
+                # call immediate
+                pass
+            else:
+                # register for later
+                pass
+            # register on_remove
+        else:
+            pass
     
     def locate_services(self, services, on_all_available, on_removed, on_all_removed):
         pass
