@@ -61,6 +61,23 @@ class DependenciesManager:
     def get_dependency(self, dep_id):
         return self.dependencies.get(dep_id)
 
+    def all_dependencies_satisfied(self, dep_id):
+        dep = self.get_dependency(dep_id)
+        if not dep:
+            raise ValueError('Invalid dependency id: %s' % dep_id)
+        if len(dep.dependencies) == 0:
+            return True
+
+        for d in dep.dependencies:
+            if not d.available:
+                return False
+        return True
+
+    def mark_available(self, dep_id):
+        if self.all_dependencies_satisfied(dep_id):
+            self.get_dependency(dep_id).available = True
+        raise Exception('Not all dependencies available')
+
     def get_install_order(self):
         graph = self.build_dependency_graph()
         dependencies_order = []

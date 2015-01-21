@@ -213,17 +213,23 @@ class PluginManager:
         # 2. Register Finder/Loader for this particular plugin
         # 3. Load the main plugin classes
         plugin = self.get_plugin(plugin_id)
+        if not self.dependencies_manager.all_dependencies_satisfied(plugin_id):
+            raise Exception('Not all dependencies satisfied for plugin: %s' % plugin_id)
         self.plugin_finder.add_plugin(plugin)
-
+        plugin.install()
+        self.__mark_available__(plugin)
 
     def activate_plugin(self, plugin_id):
-        pass
+        plugin = self.get_plugin(plugin_id)
+        plugin.activate()
     
     def deactivate_plugin(self, plugin_id):
-        pass
+        plugin = self.get_plugin(plugin_id)
+        plugin.deactivate()
         
     def uninstall_plugin(self, plugin_id):
-        pass
+        plugin = self.get_plugin(plugin_id)
+        plugin.uninstall()
         
     def gc(self):
         pass
@@ -279,7 +285,12 @@ class PluginManager:
         for plugin_id, plugin_container in self.plugins_by_id.items():
             if imp.name == plugin_id and imp.version_in_range(plugin_container.manifest.version):
                 return plugin_container
-        return None      
+        return None
+
+    def __mark_available__(self, plugin_container):
+        self.dependencies_manager.mark_available(plugin_container.plugin_id)
+        for exp in plugin_container.manifest.exports:
+            self.dependencies_manager.mark_available(exp.name)
 
 class PlatformException(Exception):
     pass
