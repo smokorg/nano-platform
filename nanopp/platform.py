@@ -14,6 +14,7 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import logging
+from nanopp import metadata
 from nanopp.dependencies import DependenciesManager
 from nanopp.tools import Proxy
 
@@ -168,7 +169,13 @@ class PluginContainer:
     def get_environ(self):
         pass
 
+
 class Platform:
+
+    def __init__(self):
+        self.log = logging.getLogger('nanopp.platform.Platform')
+        self.log.info("Nano Pltform %s initializing", metadata.version)
+
     def start(self):
         pass
     
@@ -291,6 +298,7 @@ class PluginManager:
         self.dependencies_manager.mark_available(plugin_container.plugin_id)
         for exp in plugin_container.manifest.exports:
             self.dependencies_manager.mark_available(exp.name)
+
 
 class PlatformException(Exception):
     pass
