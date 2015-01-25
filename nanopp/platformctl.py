@@ -1,5 +1,6 @@
 import argparse
 from nanopp import metadata
+from nanopp.platform import Platform
 
 __author__ = 'pavle'
 
@@ -36,8 +37,9 @@ def create_arg_parser(prog_name):
     return arg_parser
 
 def create_platform_instance(args):
-    pass
+    return Platform()
 
 def ctl_main():
     parser = create_arg_parser(PROG_NAME)
     args = parser.parse_args()
+    create_platform_instance(args)
