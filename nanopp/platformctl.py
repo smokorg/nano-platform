@@ -1,6 +1,7 @@
 import argparse
-import configparser
+
 from configparser import ConfigParser
+import logging
 from nanopp import metadata
 from nanopp.platform import Platform
 
@@ -20,7 +21,7 @@ def create_arg_parser(prog_name):
         description=DESCRIPTION)
 
     arg_parser.add_argument(
-        '-V', '--version',
+        '-v', '--version',
         action='version',
         version='{0} {1}'.format(prog_name, metadata.version))
 
@@ -29,6 +30,12 @@ def create_arg_parser(prog_name):
         default='conf/platform.ini',
         dest='config_file',
         help='Platform configuration file.'
+    )
+
+    arg_parser.add_argument(
+        '-V', '--verbose',
+        dest='verbose',
+        action='store_true'
     )
 
     arg_parser.add_argument(
@@ -51,4 +58,6 @@ def read_config(config_file):
 def ctl_main():
     parser = create_arg_parser(PROG_NAME)
     args = parser.parse_args()
+    if args.verbose:
+        logging.basicConfig(level=logging.DEBUG)
     create_platform_instance(args)

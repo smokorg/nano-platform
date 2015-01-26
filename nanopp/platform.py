@@ -181,7 +181,7 @@ class Platform:
 
     def __init__(self, config):
         self.log = logging.getLogger('nanopp.platform.Platform')
-        self.log.info("Nano Pltform %s initializing", metadata.version)
+        self.log.info("Nano Platform %s initializing", metadata.version)
         self.config = config
         self.resource_loader = self.create_resource_loader()
         self.plugins_finder = self.create_plugin_finder()
