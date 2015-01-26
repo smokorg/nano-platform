@@ -16,6 +16,9 @@
 import logging
 from nanopp import metadata
 from nanopp.dependencies import DependenciesManager
+from nanopp.loader import ClassProtocolHandler, PlatformPluginsFinder, register_finder
+from nanopp.plugins.support import PluginLoaderHandler
+from nanopp.resources import BaseResourceLoader
 from nanopp.tools import Proxy
 
 
@@ -172,15 +175,47 @@ class PluginContainer:
 
 class Platform:
 
-    def __init__(self):
+    STATE_INITIALIZING = 'initializing'
+    STATE_ACTIVE = 'active'
+    STATE_SHUTTING_DOWN = 'shutting-down'
+
+    def __init__(self, config):
         self.log = logging.getLogger('nanopp.platform.Platform')
         self.log.info("Nano Pltform %s initializing", metadata.version)
+        self.config = config
+        self.resource_loader = self.create_resource_loader()
+        self.plugins_finder = self.create_plugin_finder()
+        self.plugins_manager = PluginManager(self.resource_loader, self.plugins_finder)
+        self.state = Platform.STATE_INITIALIZING
+
+        # the init wa successful
+        self.success_init()
 
     def start(self):
         pass
     
     def shutdown(self):
         pass
+
+    # helper methods
+    def create_resource_loader(self):
+        resource_loader = BaseResourceLoader()
+        plugin_handler = PluginLoaderHandler(resource_loader)
+        class_handler = ClassProtocolHandler(resource_loader)
+        resource_loader.add_handler('plugin', plugin_handler)
+        resource_loader.add_handler('class', class_handler)
+        return resource_loader
+
+    def create_plugin_finder(self):
+        pf = PlatformPluginsFinder(self.get_restricted_modules_list())
+        return pf
+
+    def get_restricted_modules_list(self):
+        return self.config.get('platform', 'restricted-modules', fallback='').split(',') or []
+
+    def success_init(self):
+        register_finder(self.plugins_finder)
+        self.log.info('Registered path finder: %s' % self.plugins_finder)
 
 
 class PluginManager:

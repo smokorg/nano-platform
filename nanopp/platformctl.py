@@ -1,4 +1,6 @@
 import argparse
+import configparser
+from configparser import ConfigParser
 from nanopp import metadata
 from nanopp.platform import Platform
 
@@ -24,7 +26,8 @@ def create_arg_parser(prog_name):
 
     arg_parser.add_argument(
         '-c', '--config-file',
-        default='platform.ini',
+        default='conf/platform.ini',
+        dest='config_file',
         help='Platform configuration file.'
     )
 
@@ -37,7 +40,13 @@ def create_arg_parser(prog_name):
     return arg_parser
 
 def create_platform_instance(args):
-    return Platform()
+    return Platform(read_config(args.config_file))
+
+
+def read_config(config_file):
+    parser = ConfigParser()
+    parser.read(config_file)
+    return parser
 
 def ctl_main():
     parser = create_arg_parser(PROG_NAME)

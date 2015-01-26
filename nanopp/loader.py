@@ -142,7 +142,7 @@ class BaseLoader(SourceLoader):
 class PlatformPluginsFinder(BaseFinder):
 
     def __init__(self, restricted_modules):
-        super(PlatformPluginsFinder).__init__()
+        super(PlatformPluginsFinder, self).__init__()
         self.plugins = {}
         restricted_modules = restricted_modules or []
         for restricted_path in restricted_modules:
@@ -200,6 +200,7 @@ class PluginLoader(BaseLoader):
 
     def get_environ(self):
         return self.plugin_container.get_environ()
+
 
 class ClassLoader:
 
