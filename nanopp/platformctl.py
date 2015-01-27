@@ -60,4 +60,5 @@ def ctl_main():
     args = parser.parse_args()
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG)
-    create_platform_instance(args)
+    platform = create_platform_instance(args)
+    platform.start()

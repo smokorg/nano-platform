@@ -17,7 +17,7 @@ import logging
 from nanopp import metadata
 from nanopp.dependencies import DependenciesManager
 from nanopp.loader import ClassProtocolHandler, PlatformPluginsFinder, register_finder
-from nanopp.plugins.support import PluginLoaderHandler
+from nanopp.plugins.support import PluginLoaderHandler, plugin_references_from_location
 from nanopp.resources import BaseResourceLoader
 from nanopp.tools import Proxy
 
@@ -85,6 +85,7 @@ class PluginContainer:
         self.plugin_hooks = []
         self.plugin_state = None
         self.plugin = None
+        self.version = None
         self.logger = logging.getLogger('nanopp.platform.PluginContainer')
     
     def load(self):
@@ -94,6 +95,7 @@ class PluginContainer:
         self.plugin = self.loader.load('plugin:' + self.plugin_ref)
         self.manifest = self.plugin.get_manifest()
         self.plugin_id = self.manifest.id
+        self.version = self.manifest.version
         self.plugin_state = Plugin.STATE_UNINSTALLED
 
     def install(self):
@@ -192,12 +194,47 @@ class Platform:
         self.success_init()
 
     def start(self):
-        pass
-    
+        # locate all plugins
+        # load all plugins
+        # install all plugins
+        # activate all plugins
+        self.load_all_plugins()
+        self.install_all_plugins()
+        self.activate_all_plugins()
+
     def shutdown(self):
         pass
 
     # helper methods
+
+    def load_all_plugins(self):
+        locations = self.config.get('platform', 'plugins-dir', fallback='').split(',') or []
+        self.log.info('Loading plugins from these locations: %s' % locations)
+        all_refs = []
+        for location in locations:
+            all_refs = all_refs + plugin_references_from_location(location)
+        self.log.info('%d plugins' % len(all_refs))
+        for ref in all_refs:
+            self.plugins_manager.add_plugin(ref)
+        self.log.info('Plugins loaded')
+
+    def install_all_plugins(self):
+        self.log.debug('Installing all plugins...')
+        self.plugins_manager.install_all_plugins()
+        self.log.info('All plugins installed')
+
+    def activate_all_plugins(self):
+        self.log.debug('Activating all plugins...')
+        for plugin_container in self.plugins_manager.get_all_plugins():
+            self.log.info('Activating [%s - version %s]' % (plugin_container.plugin_id, plugin_container.version))
+            try:
+                self.plugins_manager.activate_plugin(plugin_container.plugin_id)
+            except Exception:
+                self.log.exception('Failed to activate plugin: [%s - version %s]' % (plugin_container.plugin_id,
+                                                                                     plugin_container.version))
+                self.plugins_manager.deactivate_plugin(plugin_container.plugin_id)
+        self.log.info('Plugins activated')
+
     def create_resource_loader(self):
         resource_loader = BaseResourceLoader()
         plugin_handler = PluginLoaderHandler(resource_loader)
@@ -275,6 +312,12 @@ class PluginManager:
         
     def gc(self):
         pass
+
+    def install_all_plugins(self):
+        pass
+
+    def get_all_plugins(self):
+        return [p for p, pr in self.plugins_by_id.items()]
 
     def get_plugin(self, plugin_id):
         plugin = self.plugins_by_id.get(plugin_id)

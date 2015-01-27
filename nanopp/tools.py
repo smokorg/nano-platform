@@ -29,5 +29,3 @@ class Proxy:
     
     def on_missing(self, name):
         pass
-        
-        

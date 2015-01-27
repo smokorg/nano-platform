@@ -17,6 +17,7 @@
 import abc
 from os.path import isdir
 import os.path
+from os import listdir
 from nanopp.resources import BaseResourceLoader, ProtocolHandler
 
 __author__ = 'pavle'
@@ -466,3 +467,23 @@ class PluginManifestParser:
         if not version:
             raise Exception("Export %s does not specify version properly" % export)
         return ExportsEntry(entry_name=export, export_version=version, is_package=False)
+
+
+def is_plugin(path):
+    if not os.path.exists(path):
+        return False
+    if os.path.isdir(path):
+        manifest_path = os.path.join(path, 'PLUGIN.MF')
+        return os.path.exists(manifest_path) and os.path.isfile(manifest_path)
+    else:
+        return False
+
+
+def plugin_references_from_location(path):
+    refs = []
+    if os.path.isdir(path):
+        for child in listdir(path):
+            ref = os.path.join(path, child)
+            if is_plugin(ref):
+                refs.append(ref)
+    return refs
