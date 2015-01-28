@@ -210,7 +210,12 @@ class Platform:
         self.log.info('Platform started')
 
     def shutdown(self):
-        pass
+        self.log.info('Platform shutting down...')
+        self.deactivate_all_plugins()
+        self.uninstall_all_plugins()
+        self.deactivate_all_plugins()
+        self.plugins_manager.gc()
+        self.log.info('Platform shutdown complete.')
 
     # helper methods
 
@@ -243,7 +248,7 @@ class Platform:
         self.log.info('Plugins activated')
 
     def deactivate_all_plugins(self):
-        self.log.debug('Deactivation all plugins...')
+        self.log.debug('Deactivating all plugins...')
         for plugin_container in self.plugins_manager.get_all_plugins():
             if plugin_container.plugin_state is Plugin.STATE_ACTIVE:
                 self.log.debug('Deactivating [%s - version %s]' % (plugin_container.plugin_id,
@@ -257,10 +262,32 @@ class Platform:
         self.log.info('All Plugins deactivated')
 
     def uninstall_all_plugins(self):
-        pass
+        self.log.debug('Uninstalling all plugins...')
+        for plugin_container in self.plugins_manager.get_all_plugins():
+            if plugin_container.plugin_state is Plugin.STATE_INSTALLED:
+                self.log.debug('Uninstalling [%s - version %s]' % (plugin_container.plugin_id,
+                                                                   plugin_container.version))
+                try:
+                    self.plugins_manager.uninstall_plugin(plugin_container.plugin_id)
+                    self.log.info('Uninstalled [%s - version %s]' % (plugin_container.plugin_id,
+                                                                     plugin_container.version))
+                except Exception:
+                    self.log.exception('Failed to uninstall plugin %s' % plugin_container)
+        self.log.info('All Plugins uninstalled')
 
     def destroy_all_plugins(self):
-        pass
+        self.log.debug('Disposing all plugins...')
+        for plugin_container in self.plugins_manager.get_all_plugins():
+            if plugin_container.plugin_state is Plugin.STATE_UNINSTALLED:
+                self.log.debug('Disposing [%s - version %s]' % (plugin_container.plugin_id,
+                                                                   plugin_container.version))
+                try:
+                    self.plugins_manager.deactivate_plugin(plugin_container.plugin_id)
+                    self.log.info('Disposed [%s - version %s]' % (plugin_container.plugin_id,
+                                                                     plugin_container.version))
+                except Exception:
+                    self.log.exception('Failed to dispose plugin %s' % plugin_container)
+        self.log.info('All Plugins disposed')
 
     def create_resource_loader(self):
         resource_loader = BaseResourceLoader()

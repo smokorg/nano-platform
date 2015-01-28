@@ -62,3 +62,4 @@ def ctl_main():
         logging.basicConfig(level=logging.DEBUG)
     platform = create_platform_instance(args)
     platform.start()
+    platform.shutdown()
