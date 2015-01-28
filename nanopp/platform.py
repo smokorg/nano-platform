@@ -174,6 +174,11 @@ class PluginContainer:
     def get_environ(self):
         pass
 
+    def state(self):
+        if not self.plugin:
+            return self.plugin.state
+        return None
+
 
 class Platform:
 
@@ -198,9 +203,11 @@ class Platform:
         # load all plugins
         # install all plugins
         # activate all plugins
+        self.log.debug('Platform starting')
         self.load_all_plugins()
         self.install_all_plugins()
         self.activate_all_plugins()
+        self.log.info('Platform started')
 
     def shutdown(self):
         pass
@@ -234,6 +241,26 @@ class Platform:
                                                                                      plugin_container.version))
                 self.plugins_manager.deactivate_plugin(plugin_container.plugin_id)
         self.log.info('Plugins activated')
+
+    def deactivate_all_plugins(self):
+        self.log.debug('Deactivation all plugins...')
+        for plugin_container in self.plugins_manager.get_all_plugins():
+            if plugin_container.plugin_state is Plugin.STATE_ACTIVE:
+                self.log.debug('Deactivating [%s - version %s]' % (plugin_container.plugin_id,
+                                                                   plugin_container.version))
+                try:
+                    self.plugins_manager.deactivate_plugin(plugin_container.plugin_id)
+                    self.log.info('Deactivated [%s - version %s]' % (plugin_container.plugin_id,
+                                                                     plugin_container.version))
+                except Exception:
+                    self.log.exception('Failed to deactivate plugin %s' % plugin_container)
+        self.log.info('All Plugins deactivated')
+
+    def uninstall_all_plugins(self):
+        pass
+
+    def destroy_all_plugins(self):
+        pass
 
     def create_resource_loader(self):
         resource_loader = BaseResourceLoader()
