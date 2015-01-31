@@ -63,3 +63,6 @@ def ctl_main():
     platform = create_platform_instance(args)
     platform.start()
     platform.shutdown()
+
+if __name__ == '__main__':
+    ctl_main()

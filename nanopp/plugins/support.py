@@ -239,11 +239,11 @@ class PluginResource:
     def get_real_rc_name(self, path):
         dirname = os.path.dirname(path) or '.'
         rc_name = os.path.basename(path)
-        if dirname and self.check_resource_exist(self.get_path(dirname)):
+        if dirname and self.check_resource_exist(dirname):
             list = self.list(dirname)
             for l in list:
                 if l.upper() == rc_name:
-                    return os.path.sep.join(dirname, l)
+                    return os.path.join(dirname, l)
         return None
 
     @abc.abstractclassmethod

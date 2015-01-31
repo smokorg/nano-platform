@@ -1,0 +1,6 @@
+Plugin-Id: core.events
+Version: 0.1
+Plugin-Classes:
+Requires:
+Exports: core.events [0.1]
+Requires-Plugins:

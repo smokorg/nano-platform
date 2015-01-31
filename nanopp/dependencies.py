@@ -17,10 +17,14 @@
 __author__ = 'pavle'
 
 
+import logging
+
+
 class DependenciesManager:
 
     def __init__(self):
         self.dependencies = {}
+        self.log = logging.getLogger('nanopp.dependencies.DependenciesManager')
 
     def add_dependency(self, dep_id, depends_on, ref=None):
         if self.dependencies.get(dep_id):
@@ -33,6 +37,7 @@ class DependenciesManager:
                 existing_dep = self.dependencies.get(dep_name)
                 if existing_dep:
                     existing_dep.dependants.append(dep)
+        self.log.debug('Added dependency: %s => %s [ref=%s]' % (dep_id, depends_on, ref))
 
     def delete_dependency(self, dep_id):
         pass
@@ -76,6 +81,7 @@ class DependenciesManager:
     def mark_available(self, dep_id):
         if self.all_dependencies_satisfied(dep_id):
             self.get_dependency(dep_id).available = True
+            return True
         raise Exception('Not all dependencies available')
 
     def get_install_order(self):
@@ -331,6 +337,9 @@ class Dependency:
         self.ref = ref
         self.dependants = []
         self.available = False
+        
+        if not len(self.dependencies):
+            self.available = True
 
     def check_available(self):
         for dep in self.dependencies:

@@ -99,6 +99,7 @@ class PluginContainer:
         self.plugin_state = Plugin.STATE_UNINSTALLED
 
     def install(self):
+        print('installing..')
         if self.plugin_state is not Plugin.STATE_UNINSTALLED:
             raise PluginLifecycleException("Cannot install plugin. Invalid state: %s" % str(self.plugin_state))
         try:
@@ -126,7 +127,7 @@ class PluginContainer:
         pass
     
     def activate(self):
-        if self.plugin_state is not Plugin.STATE_INSTALLED or self.plugin_state is not  Plugin.STATE_DEACTIVATED:
+        if self.plugin_state is not Plugin.STATE_INSTALLED and self.plugin_state is not  Plugin.STATE_DEACTIVATED:
             raise PluginLifecycleException("Cannot activate plugin. Invalid state: %s" % str(self.plugin_state))
         try:
             for hook in self.plugin_hooks:
@@ -312,6 +313,7 @@ class Platform:
 class PluginManager:
 
     def __init__(self, resource_loader, plugin_finder):
+        self.log = logging.getLogger('nanopp.platform.PluginManager')
         self.resource_loader = resource_loader
         self.plugin_finder = plugin_finder
         self.dependencies_manager = DependenciesManager()
@@ -331,6 +333,7 @@ class PluginManager:
         else:
             self.plugins_by_ref[plugin_ref] = pc
             self.plugins_by_id[pc.plugin_id] = pc
+            self.__build_dependecies__(pc)
 
     def reload_plugin(self, plugin_id, plugin_container):
         old_plugin = self.plugins_by_id[plugin_id]
@@ -358,7 +361,8 @@ class PluginManager:
     
     def deactivate_plugin(self, plugin_id):
         plugin = self.get_plugin(plugin_id)
-        plugin.deactivate()
+        if plugin.plugin_state is Plugin.STATE_ACTIVE:
+            plugin.deactivate()
         
     def uninstall_plugin(self, plugin_id):
         plugin = self.get_plugin(plugin_id)
@@ -368,10 +372,16 @@ class PluginManager:
         pass
 
     def install_all_plugins(self):
-        pass
+        self.log.debug('Installing all plugins...')
+        install_order = self.dependencies_manager.get_install_order()
+        self.log.info('Installing plugins in the following order: %s' % install_order)
+        for p_id in install_order:
+            self.log.info('Installing plugin: %s' % p_id)
+            self.install_plugin(p_id)
+        self.log.info('Plugins installed')
 
     def get_all_plugins(self):
-        return [p for p, pr in self.plugins_by_id.items()]
+        return [pr for p, pr in self.plugins_by_id.items()]
 
     def get_plugin(self, plugin_id):
         plugin = self.plugins_by_id.get(plugin_id)
