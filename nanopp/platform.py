@@ -168,12 +168,12 @@ class PluginContainer:
     def notify_state_change(self, state):
         for hook in self.plugin_hooks:
             try:
-                hook.on_state_chnage(state)
+                hook.on_state_change(state)
             except Exception as e:
                 self.logger.error('Error on state change in hook: %s. Error: %s', hook, e)
 
     def get_environ(self):
-        pass
+        return {'__platform__':'Nanopp'}
 
     def state(self):
         if not self.plugin:

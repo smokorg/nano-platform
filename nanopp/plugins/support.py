@@ -241,6 +241,7 @@ class PluginResource:
         rc_name = os.path.basename(path)
         if dirname and self.check_resource_exist(dirname):
             list = self.list(dirname)
+            rc_name = rc_name.upper()
             for l in list:
                 if l.upper() == rc_name:
                     return os.path.join(dirname, l)
@@ -277,6 +278,20 @@ class PluginResource:
         fullpath = os.path.join(dirname, filename + '.py')
         return self.resource_exists(fullpath, True) and self.resource_is_file(fullpath, True)
 
+    def read_code(self, path):
+        rc_name = path
+        if self.is_package(path):
+            rc_name = os.path.join(path, '__init__.py')
+        return self.read_resource_fully(rc_name, True)
+
+    def import_to_filename(self, fullname):
+        path = fullname.replace('.', os.path.sep)
+        if self.is_package(fullname):
+            return os.path.join(path, '__init__.py')
+        elif self.resource_exists(path + '.py') and self.resource_is_file(path + '.py'):
+            return path + '.py'
+        else:
+            return None
 
 class ExplodedPlugin(PluginResource):
     def __init__(self, path, manifest_parser):

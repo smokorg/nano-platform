@@ -21,6 +21,7 @@ from importlib.abc import SourceLoader
 import re
 import threading
 import sys
+import os.path
 from nanopp.resources import ProtocolHandler
 
 __local_context = threading.local()
@@ -31,13 +32,18 @@ IMPORT_CONTEXT = "nanopp.IMPORT_CONTEXT"
 
 
 def put_to_context(key, value):
-    __local_context[key] = value
+    try:
+        tl_values = __local_context.tl_values
+    except AttributeError:
+        __local_context.tl_values = {}
+        tl_values = __local_context.tl_values
+    tl_values[key] = value
 
 
 def get_from_context(key):
     try:
-        return __local_context[key]
-    except KeyError:
+        return __local_context.tl_values[key]
+    except (KeyError, AttributeError):
         return None
 
 
@@ -125,7 +131,7 @@ class BaseLoader(SourceLoader):
         pass
 
     def exec_module(self, module):
-        module.__context__ = self.context
+        module.__context__ = self.get_current_context()
         extend(module.__dict__, self.get_overriden_globals())
         return SourceLoader.exec_module(self, module)
 
@@ -188,18 +194,22 @@ class PluginLoader(BaseLoader):
         return self.plugin_container.plugin_id
 
     def get_filename(self, fullname):
-        if not self.plugin_container.plugin.resource_exists(fullname):
-            raise ImportError
+        fullname = self.plugin_container.plugin.import_to_filename(fullname)
+        if not fullname:
+            raise ImportError('File %s not found' % fullname)
         return fullname
 
     def get_data(self, path):
-        if not self.plugin_container.plugin.resource_exist(path):
+        if not self.plugin_container.plugin.resource_exists(path):
             return None
 
-        return self.plugin_container.plugin.read_resource(path, True).read()
+        return self.plugin_container.plugin.read_code(path)
 
     def get_environ(self):
         return self.plugin_container.get_environ()
+    
+    def is_package(self, fullname):
+        return self.plugin_container.plugin.is_package(fullname)
 
 
 class ClassLoader:
@@ -208,9 +218,11 @@ class ClassLoader:
         self.import_fn = import_fn
 
     def load_class(self, class_name):
+        print('class_name=%s' % class_name)
         if not class_name:
             raise ValueError('Class name must be given')
         package, dot, clazz = class_name.rpartition('.')
+        print('pkg=%s, class=%s' % (package,clazz))
         if not package:
             # FIXME: Research what happens if classes with no package are loaded
             raise ValueError('Unable to load top-level classes')
