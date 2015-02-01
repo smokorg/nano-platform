@@ -33,4 +33,9 @@ class Proxy:
         return prop_value
     
     def on_missing(self, name):
-        pass
+        return Proxy.__NOOP__property__()
+
+    class __NOOP__property__:
+
+        def __call__(self, *args, **kwargs):
+            pass
