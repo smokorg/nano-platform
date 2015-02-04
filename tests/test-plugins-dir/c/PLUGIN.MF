@@ -1,0 +1,6 @@
+Plugin-Id: plugin.C
+Version: 0.2
+Plugin-Classes:
+Requires:
+Exports: 
+Requires-Plugins:plugins.B(0.5,0.7)

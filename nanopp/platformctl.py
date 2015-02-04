@@ -47,7 +47,9 @@ def create_arg_parser(prog_name):
     return arg_parser
 
 def create_platform_instance(args):
-    return Platform(read_config(args.config_file))
+    config = read_config(args.config_file)
+    config.set('platform','plugins-dir', args.plugins_directory)
+    return Platform(config)
 
 
 def read_config(config_file):

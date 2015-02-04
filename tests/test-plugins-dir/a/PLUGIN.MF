@@ -1,0 +1,6 @@
+Plugin-Id: plugin.A
+Version: 0.1
+Plugin-Classes:
+Requires:
+Exports: 
+Requires-Plugins:plugin.B,plugin.D
