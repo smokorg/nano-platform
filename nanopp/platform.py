@@ -313,7 +313,8 @@ class PluginManager:
         self.log = logging.getLogger('nanopp.platform.PluginManager')
         self.resource_loader = resource_loader
         self.plugin_finder = plugin_finder
-        self.dependencies_manager = DependenciesManager()
+        self.modules_dependencies = DependenciesManager()
+        self.plugins_dependencies = DependenciesManager()
         self.plugins_by_ref = {}
         self.plugins_by_id = {}
         self.all_exports = {}
@@ -408,7 +409,21 @@ class PluginManager:
             dependencies.append(req_plugin.plugin_id)
 
         self.dependencies_manager.add_dependency(plugin_id, dependencies, plugin_container)
-
+    
+    
+    def __build_plugin_dependencies__(self, plugin_container):
+        pass
+        
+    def __build_modules_dependencies__(self, plugin_container):
+        pass
+    
+    def __release_plugin_dependencies__(self, plugin_container):
+        pass
+        
+    def __release_modules_dependencies__(self, plugin_container):
+        pass
+        
+    
     def build_dependencies(self):
         # load all exports
         for plugin_id, pc in self.plugins_by_id.items():

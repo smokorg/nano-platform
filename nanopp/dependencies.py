@@ -38,6 +38,7 @@ class DependenciesManager:
                 if existing_dep:
                     existing_dep.dependants.append(dep)
         self.log.debug('Added dependency: %s => %s [ref=%s]' % (dep_id, depends_on, ref))
+        return dep
 
     def delete_dependency(self, dep_id):
         pass
