@@ -409,10 +409,12 @@ class PluginManager:
             dependencies.append(req_plugin.plugin_id)
 
         self.dependencies_manager.add_dependency(plugin_id, dependencies, plugin_container)
-    
-    
+
     def __build_plugin_dependencies__(self, plugin_container):
-        pass
+        plugin_id = plugin_container.plugin_id
+        dependencies = []
+        for imp in plugin_container.manifest.requires_plugins:
+            pass
         
     def __build_modules_dependencies__(self, plugin_container):
         pass
