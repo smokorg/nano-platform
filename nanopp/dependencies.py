@@ -367,15 +367,16 @@ class VersionedDependency(Dependency):
         return satisfied
 
 
-# ### Plugiin dependencies ###
+# ### Plugin dependencies ###
 
-class PlugiinDependency(Vertex):
+class PluginDependency(Vertex):
     
     def __init__(self, name, version=None):
-        super(PlugiinDependency, self).__init__(name)
+        super(PluginDependency, self).__init__(name)
         self.version = version
         self.providers = []
-        
+
+
 class Require(Edge):
     # Head ----> Tail (Head depends on Tail)
     def __init__(self, head, tail, min_version=None, max_version=None):
@@ -385,6 +386,18 @@ class Require(Edge):
     
     def __to_version_tupple__(v):
         return v if isinstance(v, tuple) else (v, True)
+
+
+
+class PluginDependenciesManager:
+
+    def __init__(self):
+        pass
+
+    def add_dependency(self, name, version):
+        pass
+
+    
 
 
 class ServiceDependency(Dependency):

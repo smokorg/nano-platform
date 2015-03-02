@@ -13,6 +13,11 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
+Test
+"""
+
 import logging
 from nanopp import metadata
 from nanopp.dependencies import DependenciesManager
@@ -23,7 +28,7 @@ from nanopp.tools import Proxy
 
 
 class Plugin:
-    """ Base class for all Plugins.
+    """Base class for all Plugins.
     
     This is the entry point in the plugin itself. Each plugin MUST expose
     at least one implementation of Plguin.
