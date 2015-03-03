@@ -375,6 +375,9 @@ class PluginDependency(Vertex):
         super(PluginDependency, self).__init__(name)
         self.version = version
         self.providers = []
+    
+    def add_provider(self, provider):
+        self.providers.append(provider)
 
 
 class Require(Edge):
@@ -392,9 +395,19 @@ class Require(Edge):
 class PluginDependenciesManager:
 
     def __init__(self):
-        pass
+        self.dependencies_graph = Graph()
 
-    def add_dependency(self, name, version):
+    def add_dependency(self, name, version, providers=None):
+        pass
+    
+    def add_provider(self, dep_name, version, provider):
+    """ Should also mark if a require has been satisfied
+    """
+        pass
+    
+    def require(self, dep_name, require, min_version, max_version):
+    """ Dependency dep_name requires require in range min_version to max_version
+    """
         pass
 
     
