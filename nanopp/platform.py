@@ -13,6 +13,11 @@
 #
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+"""
+Test
+"""
+
 import logging
 from nanopp import metadata
 from nanopp.dependencies import DependenciesManager
@@ -23,7 +28,7 @@ from nanopp.tools import Proxy
 
 
 class Plugin:
-    """ Base class for all Plugins.
+    """Base class for all Plugins.
     
     This is the entry point in the plugin itself. Each plugin MUST expose
     at least one implementation of Plguin.
@@ -313,7 +318,8 @@ class PluginManager:
         self.log = logging.getLogger('nanopp.platform.PluginManager')
         self.resource_loader = resource_loader
         self.plugin_finder = plugin_finder
-        self.dependencies_manager = DependenciesManager()
+        self.modules_dependencies = DependenciesManager()
+        self.plugins_dependencies = DependenciesManager()
         self.plugins_by_ref = {}
         self.plugins_by_id = {}
         self.all_exports = {}
@@ -409,6 +415,22 @@ class PluginManager:
 
         self.dependencies_manager.add_dependency(plugin_id, dependencies, plugin_container)
 
+    def __build_plugin_dependencies__(self, plugin_container):
+        plugin_id = plugin_container.plugin_id
+        dependencies = []
+        for imp in plugin_container.manifest.requires_plugins:
+            pass
+        
+    def __build_modules_dependencies__(self, plugin_container):
+        pass
+    
+    def __release_plugin_dependencies__(self, plugin_container):
+        pass
+        
+    def __release_modules_dependencies__(self, plugin_container):
+        pass
+        
+    
     def build_dependencies(self):
         # load all exports
         for plugin_id, pc in self.plugins_by_id.items():

@@ -38,6 +38,7 @@ class DependenciesManager:
                 if existing_dep:
                     existing_dep.dependants.append(dep)
         self.log.debug('Added dependency: %s => %s [ref=%s]' % (dep_id, depends_on, ref))
+        return dep
 
     def delete_dependency(self, dep_id):
         pass
@@ -348,6 +349,57 @@ class Dependency:
         return True
 
 
+class VersionedDependency(Dependency):
+
+    def __init__(self, dep_name, version, min_version=None, max_version=None, depends_on=None, ref=None):
+        super(Dependency, self).__init__(dep_name, depends_on, ref)
+        self.version = version
+        self.min_version = min_version if isinstance(min_version, tuple) else (min_version, True)
+        self.max_version = max_version if isinstance(max_version, tuple) else (max_version, True)
+
+    def is_satisfied_with(self, v_dep):
+        min_v, min_incl = self.min_version
+        max_v, max_incl = self.max_version
+        satisfied = v_dep.version >= min_v if min_incl else v_dep.version > min_v
+        if not satisfied:
+            return False
+        satisfied = v_dep.version <= max_v if max_incl else v_dep.version < max_v
+        return satisfied
+
+
+# ### Plugin dependencies ###
+
+class PluginDependency(Vertex):
+    
+    def __init__(self, name, version=None):
+        super(PluginDependency, self).__init__(name)
+        self.version = version
+        self.providers = []
+
+
+class Require(Edge):
+    # Head ----> Tail (Head depends on Tail)
+    def __init__(self, head, tail, min_version=None, max_version=None):
+        super(Require, self).__init__(head, tail)
+        self.min_version = self.__to_version_tupple__(min_version)
+        self.max_version = self.__to_version_tupple__(max_version)
+    
+    def __to_version_tupple__(v):
+        return v if isinstance(v, tuple) else (v, True)
+
+
+
+class PluginDependenciesManager:
+
+    def __init__(self):
+        pass
+
+    def add_dependency(self, name, version):
+        pass
+
+    
+
+
 class ServiceDependency(Dependency):
 
     def __init__(self, service_name, depends_on, factory=None):
@@ -444,30 +496,3 @@ class ServiceContext:
     
     def remove_service(self, name):
         pass
-     
-
-
-if __name__ == '__main__':
-    graph = Graph()
-
-    a = graph.add_vertex(Vertex(name='A'))
-    b = graph.add_vertex(Vertex(name='B'))
-    c = graph.add_vertex(Vertex(name='C'))
-    d = graph.add_vertex(Vertex(name='D'))
-    e = graph.add_vertex(Vertex(name='E'))
-    f = graph.add_vertex(Vertex(name='F'))
-
-    graph.create_edge(a, b)
-    graph.create_edge(a, e)
-    graph.create_edge(a, d)
-    graph.create_edge(b, e)
-    graph.create_edge(c, e)
-    graph.create_edge(c, f)
-    graph.create_edge(c, d)
-    graph.create_edge(f, d)
-    graph.create_edge(d, e)
-
-    print(graph)
-
-    for v in graph:
-        print(v)
