@@ -219,6 +219,7 @@ class Graph:
         return self.vertices_by_name.get(v_name)
 
     @staticmethod
+    #FIXME: This must depend on the edge itself
     def __to_edge_id(head_v, tail_v):
         return "%s-%s" % (head_v.name, tail_v.name)
 
@@ -391,26 +392,36 @@ class Require(Edge):
         return v if isinstance(v, tuple) else (v, True)
 
 
-
 class PluginDependenciesManager:
 
     def __init__(self):
         self.dependencies_graph = Graph()
 
-    def add_dependency(self, name, version, providers=None):
-        pass
+    def dependency(self, name, version, providers=None):
+        dep = self.dependencies_graph.get_vertex(name)
+        if not dep:
+            dep = self.__new_dependency__(name, version, providers)
+            self.dependencies_graph.add_vertex(dep)
+        return dep
     
     def add_provider(self, dep_name, version, provider):
-    """ Should also mark if a require has been satisfied
-    """
+        """ Should also mark if a require has been satisfied
+        """
         pass
     
     def require(self, dep_name, require, min_version, max_version):
-    """ Dependency dep_name requires require in range min_version to max_version
-    """
-        pass
+        """ Dependency dep_name requires require in range min_version to max_version
+        """
+        # We're actaully creating an edge E(dep_name, require) and add it to the graph
+        
+        req = Require(self.dependency(dep_name), self.dependency(require),min_version, max_version)
+        self.dependencies_graph.add_edge(req) # FIXME: Graph should support this
 
-    
+    def __new_dependency__(self, name, version, providers=None):
+        dep = PluginDependency(name, version)
+        if providers:
+            dep.providers += providers
+        return dep
 
 
 class ServiceDependency(Dependency):
