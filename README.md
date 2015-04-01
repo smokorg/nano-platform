@@ -1,4 +1,4 @@
-Nano Plugins Platform
+Termite Plugins Platform
 ---------------------
 
 Plugin infrastructure for Python.
