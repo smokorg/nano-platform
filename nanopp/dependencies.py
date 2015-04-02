@@ -185,7 +185,9 @@ class Edge(Markable):
 
     def __repr__(self):
         return self.__str__()
-
+    
+    def id(self):
+        return "%s-%s" % (self.head.name, self.tail.name)
 
 class Graph:
 
@@ -214,7 +216,21 @@ class Graph:
         head_vertex.add_edge(edge)
         tail_vertex.add_edge(edge)
         return edge
-
+    
+    def add_edge(self,edge):
+        edge_id = edge.id()
+        if not (self.vertices_by_name.get(edge.head.name) and self.vertices_by_name.get(edge.tail.name)):
+            raise Exception("Edge to a vertex not known to this graph")
+        if self.edges_by_vertex.get(edge_id):
+            raise Exception("Edge (%s) already exists" % str(edge))
+        
+        self.edges_by_vertex[edge_id] = edge
+        self.edges.append(edge)
+        edge.head.add_edge(edge)
+        edge.tail.add_edge(edge)
+        return edge
+        
+        
     def get_vertex(self, v_name):
         return self.vertices_by_name.get(v_name)
 
@@ -390,7 +406,23 @@ class Require(Edge):
     
     def __to_version_tupple__(v):
         return v if isinstance(v, tuple) else (v, True)
-
+    
+    def __str_versions__(self):
+        mn_v,mn_incl = self.min_version
+        mx_v,mx_incl = self.max_version
+        mn_incl = '[' if mn_incl else '('
+        mx_incl = ']' if mx_incl else ')'
+        return '%s%s,%s%s' % (mn_incl,str(mn_v),str(mx_v),mx_incl)
+        
+    
+    def id(self):
+        return '%s->%s:%s' % (self.head,self.tail,self.__str_versions__())
+    
+    def __str__(self):
+        return 'Req: %s-->%s: %s' % (self.head,self.tail,self.__str_versions__())
+    
+    def __repr__(self):
+        return self.__str__()
 
 class PluginDependenciesManager:
 
