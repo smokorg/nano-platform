@@ -2,7 +2,7 @@ from logging import DEBUG
 import logging
 import sys
 from unittest.case import TestCase
-from nanopp.dependencies import DependenciesManager, Graph, Vertex
+from nanopp.dependencies import DependenciesManager, Graph, Vertex, PluginDependenciesManager
 
 __author__ = 'pavle'
 
@@ -105,3 +105,10 @@ class TestGraph(TestCase):
         self.assertTrue([a, b, c, d, e], rings[0])
         self.assertTrue([d, e, f], rings[1])
 
+
+class TestPluginDependenciesManager(TestCase):
+    
+    def test_dependency(self):
+        pdm = PluginDependenciesManager()
+        d = pdm.dependency('plugin.one','1.0.3')
+        logging.info('Dependency: %s',d)

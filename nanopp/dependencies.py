@@ -395,7 +395,9 @@ class PluginDependency(Vertex):
     
     def add_provider(self, provider):
         self.providers.append(provider)
-
+    
+    def __str__(self):
+        return 'Dep(%s %s)' %(self.name, self.version)
 
 class Require(Edge):
     # Head ----> Tail (Head depends on Tail)
