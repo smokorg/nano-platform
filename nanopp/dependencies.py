@@ -171,6 +171,9 @@ class Vertex(Markable):
                 ie.append(e)
         return ie
 
+    def id(self):
+        return self.name
+
 
 class Edge(Markable):
 
@@ -189,6 +192,7 @@ class Edge(Markable):
     def id(self):
         return "%s-%s" % (self.head.name, self.tail.name)
 
+
 class Graph:
 
     def __init__(self):
@@ -198,15 +202,15 @@ class Graph:
         self.edges_by_vertex = {}
 
     def add_vertex(self, vertex):
-        if self.vertices_by_name.get(vertex.name):
-            raise Exception('Vertex %s already added' % vertex.name)
+        if self.vertices_by_name.get(vertex.id()):
+            raise Exception('Vertex %s already added' % vertex.id())
         self.vertices.append(vertex)
-        self.vertices_by_name[vertex.name] = vertex
+        self.vertices_by_name[vertex.id()] = vertex
         return vertex
 
     def create_edge(self, tail_vertex, head_vertex):
         edge_id = self.__to_edge_id(head_vertex, tail_vertex)
-        if not (self.vertices_by_name.get(head_vertex.name) and self.vertices_by_name.get(tail_vertex.name)):
+        if not (self.vertices_by_name.get(head_vertex.id()) and self.vertices_by_name.get(tail_vertex.id())):
             raise Exception("Edge to a vertex not known to this graph")
         if self.edges_by_vertex.get(edge_id):
             raise Exception("Edge (%s - %s) already exists" % (head_vertex, tail_vertex))
@@ -219,7 +223,7 @@ class Graph:
     
     def add_edge(self,edge):
         edge_id = edge.id()
-        if not (self.vertices_by_name.get(edge.head.name) and self.vertices_by_name.get(edge.tail.name)):
+        if not (self.vertices_by_name.get(edge.head.id()) and self.vertices_by_name.get(edge.tail.id())):
             raise Exception("Edge to a vertex not known to this graph")
         if self.edges_by_vertex.get(edge_id):
             raise Exception("Edge (%s) already exists" % str(edge))
@@ -229,8 +233,7 @@ class Graph:
         edge.head.add_edge(edge)
         edge.tail.add_edge(edge)
         return edge
-        
-        
+
     def get_vertex(self, v_name):
         return self.vertices_by_name.get(v_name)
 
@@ -399,6 +402,10 @@ class PluginDependency(Vertex):
     def __str__(self):
         return 'Dep(%s %s)' %(self.name, self.version)
 
+    def id(self):
+        return '%s:%s' %(self.name, self.version)
+
+
 class Require(Edge):
     # Head ----> Tail (Head depends on Tail)
     def __init__(self, head, tail, min_version=None, max_version=None):
@@ -410,21 +417,24 @@ class Require(Edge):
         return v if isinstance(v, tuple) else (v, True)
     
     def __str_versions__(self):
-        mn_v,mn_incl = self.min_version
-        mx_v,mx_incl = self.max_version
+        mn_v, mn_incl = self.min_version
+        mx_v, mx_incl = self.max_version
         mn_incl = '[' if mn_incl else '('
         mx_incl = ']' if mx_incl else ')'
-        return '%s%s,%s%s' % (mn_incl,str(mn_v),str(mx_v),mx_incl)
-        
+        return '%s%s,%s%s' % (mn_incl, str(mn_v),str(mx_v),mx_incl)
     
     def id(self):
-        return '%s->%s:%s' % (self.head,self.tail,self.__str_versions__())
+        return '%s->%s:%s' % (self.head, self.tail, self.__str_versions__())
     
     def __str__(self):
-        return 'Req: %s-->%s: %s' % (self.head,self.tail,self.__str_versions__())
+        return 'Req: %s-->%s: %s' % (self.head, self.tail, self.__str_versions__())
     
     def __repr__(self):
         return self.__str__()
+
+    def mark_if_satisfied(self, version):
+        return False
+
 
 class PluginDependenciesManager:
 
@@ -441,15 +451,21 @@ class PluginDependenciesManager:
     def add_provider(self, dep_name, version, provider):
         """ Should also mark if a require has been satisfied
         """
-        pass
+        dep = self.dependencies_graph.get_vertex(dep_name)
+        if not dep:
+            raise Exception('Dependency [%s] does not exist.' % dep_name)
+
+        dep.add_provider(provider)
     
     def require(self, dep_name, require, min_version, max_version):
         """ Dependency dep_name requires require in range min_version to max_version
         """
-        # We're actaully creating an edge E(dep_name, require) and add it to the graph
+        # We're actually creating an edge E(dep_name, require) and add it to the graph
         
         req = Require(self.dependency(dep_name), self.dependency(require),min_version, max_version)
-        self.dependencies_graph.add_edge(req) # FIXME: Graph should support this
+        self.dependencies_graph.add_edge(req)  # FIXME: Graph should support this
+
+        return req
 
     def __new_dependency__(self, name, version, providers=None):
         dep = PluginDependency(name, version)
