@@ -149,7 +149,7 @@ class Vertex(Markable):
         super().__init__()
 
     def __str__(self):
-        return "V(%s)" % self.name
+        return "V(%s)" % self.id()
 
     def __repr__(self):
         return self.__str__()
@@ -391,20 +391,35 @@ class VersionedDependency(Dependency):
 
 class PluginDependency(Vertex):
     
-    def __init__(self, name, version=None):
+    def __init__(self, name):
         super(PluginDependency, self).__init__(name)
-        self.version = version
-        self.providers = []
+        self.providers = {}
     
-    def add_provider(self, provider):
-        self.providers.append(provider)
+    def add_provider(self, version, provider):
+        if not self.providers.get(version):
+            self.providers[version] = []
+        self.providers[version].append(provider)
     
     def __str__(self):
-        return 'Dep(%s %s)' %(self.name, self.version)
+        return 'Dep(%s)' % self.name
 
-    def id(self):
-        return '%s:%s' %(self.name, self.version)
-
+#    def id(self):
+#        return '%s:%s' %(self.name, self.version)
+    
+    def get_providers(self, require):
+        providers_matching = []
+        
+        for provider in self.providers:
+            if require.is_satisfied_with(provider):
+                providers_matching.append(provider)
+        
+        return providers_matching
+        
+    def dependencies_satisfied(self):
+        for req in self.out_edges():
+            if not req.is_satisfied():
+                return False
+        return True
 
 class Require(Edge):
     # Head ----> Tail (Head depends on Tail)
@@ -432,8 +447,14 @@ class Require(Edge):
     def __repr__(self):
         return self.__str__()
 
-    def mark_if_satisfied(self, version):
+    def is_satisfied_with(self, version):
         return False
+    
+    def mark_satisfied(self):
+        self.mark('satisfied')
+    
+    def is_satisfied(self):
+        return self.marked() == 'satisfied'
 
 
 class PluginDependenciesManager:
@@ -444,7 +465,7 @@ class PluginDependenciesManager:
     def dependency(self, name, version, providers=None):
         dep = self.dependencies_graph.get_vertex(name)
         if not dep:
-            dep = self.__new_dependency__(name, version, providers)
+            dep = self.__new_dependency__(name, providers)
             self.dependencies_graph.add_vertex(dep)
         return dep
     
@@ -455,22 +476,27 @@ class PluginDependenciesManager:
         if not dep:
             raise Exception('Dependency [%s] does not exist.' % dep_name)
 
-        dep.add_provider(provider)
+        dep.add_provider(version, provider)
+        
+        for req in dep.in_edges():
+            if req.is_satisfied_with(version):
+                req.mark_satisfied()
     
     def require(self, dep_name, require, min_version, max_version):
         """ Dependency dep_name requires require in range min_version to max_version
         """
         # We're actually creating an edge E(dep_name, require) and add it to the graph
         
-        req = Require(self.dependency(dep_name), self.dependency(require),min_version, max_version)
-        self.dependencies_graph.add_edge(req)  # FIXME: Graph should support this
+        req = Require(self.dependency(dep_name), self.dependency(require), min_version, max_version)
+        self.dependencies_graph.add_edge(req)
 
         return req
 
-    def __new_dependency__(self, name, version, providers=None):
-        dep = PluginDependency(name, version)
+    def __new_dependency__(self, name, providers=None):
+        dep = PluginDependency(name)
         if providers:
-            dep.providers += providers
+            for version, provider in providers.items():
+                dep.add_provider(version, provider)
         return dep
 
 
