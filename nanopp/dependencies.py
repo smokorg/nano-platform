@@ -132,13 +132,19 @@ class DependenciesManager:
 class Markable:
 
     def __init__(self):
-        self.__mark = None
+        self.__marks = {}
 
-    def mark(self, value):
-        self.__mark = value
+    def mark(self, key, value=None):
+        if value is None:
+            value = key
+            key = ':default'
+            
+        self.__marks[key] = value
 
-    def marked(self):
-        return self.__mark
+    def marked(self, key=None):
+        if key is None:
+            key = ':default'
+        return self.__marks.get(key)
 
 
 class Vertex(Markable):
@@ -422,13 +428,13 @@ class PluginDependency(Vertex):
         return True
 
 class Require(Edge):
-    # Head ----> Tail (Head depends on Tail)
+    # Tail ----> Head (Tail depends on Head)
     def __init__(self, head, tail, min_version=None, max_version=None):
         super(Require, self).__init__(head, tail)
         self.min_version = self.__to_version_tupple__(min_version)
         self.max_version = self.__to_version_tupple__(max_version)
     
-    def __to_version_tupple__(v):
+    def __to_version_tupple__(self, v):
         return v if isinstance(v, tuple) else (v, True)
     
     def __str_versions__(self):
@@ -439,10 +445,10 @@ class Require(Edge):
         return '%s%s,%s%s' % (mn_incl, str(mn_v),str(mx_v),mx_incl)
     
     def id(self):
-        return '%s->%s:%s' % (self.head, self.tail, self.__str_versions__())
+        return '%s->%s:%s' % (self.tail, self.head, self.__str_versions__())
     
     def __str__(self):
-        return 'Req: %s-->%s: %s' % (self.head, self.tail, self.__str_versions__())
+        return 'Req: %s-->%s: %s' % (self.tail, self.head, self.__str_versions__())
     
     def __repr__(self):
         return self.__str__()
@@ -462,7 +468,7 @@ class PluginDependenciesManager:
     def __init__(self):
         self.dependencies_graph = Graph()
 
-    def dependency(self, name, version, providers=None):
+    def dependency(self, name, providers=None):
         dep = self.dependencies_graph.get_vertex(name)
         if not dep:
             dep = self.__new_dependency__(name, providers)
@@ -487,7 +493,7 @@ class PluginDependenciesManager:
         """
         # We're actually creating an edge E(dep_name, require) and add it to the graph
         
-        req = Require(self.dependency(dep_name), self.dependency(require), min_version, max_version)
+        req = Require(self.dependency(require), self.dependency(dep_name), min_version, max_version)
         self.dependencies_graph.add_edge(req)
 
         return req
@@ -498,8 +504,38 @@ class PluginDependenciesManager:
             for version, provider in providers.items():
                 dep.add_provider(version, provider)
         return dep
-
-
+    
+    def reverese_dependency_order(self):
+        graph = self.dependencies_graph.__clone__()
+        order = []
+        
+        for dep in graph.vertices:
+            self.__follow__(dep, order)
+        
+        return order
+    
+    def __follow__(self, v_parent, list_in_order):
+        if v_parent.marked('VISITED'):
+            return
+        if not len(v_parent.out_edges()) or self.__all_visited__(v_parent):
+            list_in_order.append(v_parent)
+        self.__mark_all_in_edg__(v_parent)
+        v_parent.mark('VISITED')
+        for edg in v_parent.in_edges():
+            print('Follow: (%s) %s -> %s' % (edg, v_parent, edg.tail))
+            self.__follow__(edg.tail, list_in_order)
+        list_in_order.append(v_parent)
+    
+    def __all_visited__(self, vx):
+        for edg in vx.out_edges():
+            if not edg.marked('VISITED'):
+                return False
+        return True            
+    
+    def __mark_all_in_edg__(self, v_parent):
+        for edg in v_parent.in_edges():
+            edg.mark('VISITED')
+    
 class ServiceDependency(Dependency):
 
     def __init__(self, service_name, depends_on, factory=None):

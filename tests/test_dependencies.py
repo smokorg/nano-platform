@@ -110,5 +110,31 @@ class TestPluginDependenciesManager(TestCase):
     
     def test_dependency(self):
         pdm = PluginDependenciesManager()
-        d = pdm.dependency('plugin.one','1.0.3')
+        d = pdm.dependency('plugin.one')
         logging.info('Dependency: %s',d)
+    
+    def test_dependecy_reverese_order(self):
+        pdm = PluginDependenciesManager()
+        
+        a = pdm.dependency('a')
+        b = pdm.dependency('b')
+        c = pdm.dependency('c')
+        d = pdm.dependency('d')
+        e = pdm.dependency('e')
+        
+        pdm.require('a','b', (0,False), (1,False))
+        pdm.require('a','b', (1,False), (2,False))
+        pdm.require('a','c', (0,False), (1,False))
+        pdm.require('c','d', (0,False), (1,False))
+        pdm.require('c','d', (1,False), (2,False))
+        pdm.require('b','d', (0,False), (1,False))
+        pdm.require('d','e', (0,False), (1,False))
+        pdm.require('d','e', (1,False), (2,False))
+        
+        order = pdm.reverese_dependency_order()
+        print('In order: %s' % str(order))
+        
+        
+        
+        
+        
