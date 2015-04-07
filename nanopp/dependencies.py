@@ -519,12 +519,13 @@ class PluginDependenciesManager:
             return
         if not len(v_parent.out_edges()) or self.__all_visited__(v_parent):
             list_in_order.append(v_parent)
-        self.__mark_all_in_edg__(v_parent)
-        v_parent.mark('VISITED')
-        for edg in v_parent.in_edges():
-            print('Follow: (%s) %s -> %s' % (edg, v_parent, edg.tail))
-            self.__follow__(edg.tail, list_in_order)
-        list_in_order.append(v_parent)
+            v_parent.mark('VISITED', True)
+            for edg in v_parent.in_edges():
+                edg.mark('VISITED', True)
+                self.__follow__(edg.tail, list_in_order)
+        else:
+            for edg in v_parent.out_edges():
+                self.__follow__(edg.head, list_in_order)
     
     def __all_visited__(self, vx):
         for edg in vx.out_edges():
