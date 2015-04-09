@@ -134,6 +134,26 @@ class TestPluginDependenciesManager(TestCase):
         order = pdm.reverese_dependency_order()
         print('In order: %s' % str(order))
         
+    def test_iterate_graph(self):
+        pdm = PluginDependenciesManager()
+        
+        a = pdm.dependency('a')
+        b = pdm.dependency('b')
+        c = pdm.dependency('c')
+        d = pdm.dependency('d')
+        e = pdm.dependency('e')
+        
+        pdm.require('e','b', (0,False), (1,False))
+        pdm.require('e','b', (1,False), (2,False))
+        pdm.require('e','c', (0,False), (1,False))
+        pdm.require('c','d', (0,False), (1,False))
+        pdm.require('c','d', (1,False), (2,False))
+        pdm.require('b','d', (0,False), (1,False))
+        pdm.require('d','a', (0,False), (1,False))
+        pdm.require('d','a', (1,False), (2,False))
+        
+        for d in pdm.dependencies_graph:
+            logging.debug(d)
         
         
         

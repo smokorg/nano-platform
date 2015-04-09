@@ -537,6 +537,10 @@ class PluginDependenciesManager:
         for edg in v_parent.in_edges():
             edg.mark('VISITED')
     
+    def get_dependency(self, name):
+        return self.dependencies_graph.get_vertex(name)
+
+    
 class ServiceDependency(Dependency):
 
     def __init__(self, service_name, depends_on, factory=None):
