@@ -539,7 +539,12 @@ class PluginDependenciesManager:
     
     def get_dependency(self, name):
         return self.dependencies_graph.get_vertex(name)
-
+    
+    def remove_require(self, dep_name, require, min_version, max_version):
+        pass
+    
+    def remove_dependency(self, dep_name):
+        pass
     
 class ServiceDependency(Dependency):
 
