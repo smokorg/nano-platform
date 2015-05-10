@@ -20,115 +20,6 @@ __author__ = 'pavle'
 import logging
 
 
-class DependenciesManager:
-
-    def __init__(self):
-        self.dependencies = {}
-        self.log = logging.getLogger('nanopp.dependencies.DependenciesManager')
-
-    def add_dependency(self, dep_id, depends_on, ref=None):
-        if self.dependencies.get(dep_id):
-            raise Exception('Duplicate dependency definition. Dependency %s already added.' % dep_id)
-        dep = self.create_dependency_instance(dep_id, depends_on, ref)
-        self.dependencies[dep_id] = dep
-
-        if depends_on:
-            for dep_name in depends_on:
-                existing_dep = self.dependencies.get(dep_name)
-                if existing_dep:
-                    existing_dep.dependants.append(dep)
-        self.log.debug('Added dependency: %s => %s [ref=%s]' % (dep_id, depends_on, ref))
-        return dep
-
-    def delete_dependency(self, dep_id):
-        pass
-
-    def create_dependency_instance(self, dep_id, depends_on, ref=None):
-        dep = Dependency(dep_name=dep_id, depends_on=depends_on, ref=ref)
-        return dep
-
-    def build_dependency_graph(self):
-        graph = Graph()
-        edges = []
-        for dep_id, dependency in self.dependencies.items():
-            v = Vertex(dep_id)
-            graph.add_vertex(v)
-            for d in dependency.dependencies:
-                edges.append((d, dep_id))
-
-        for head, tail in edges:
-            head_v = graph.get_vertex(head) or graph.add_vertex(Vertex(head))
-            tail_v = graph.get_vertex(tail) or graph.add_vertex(Vertex(tail))
-
-            graph.create_edge(tail_vertex=tail_v, head_vertex=head_v)
-
-        return graph
-
-    def get_dependency(self, dep_id):
-        return self.dependencies.get(dep_id)
-
-    def all_dependencies_satisfied(self, dep_id):
-        dep = self.get_dependency(dep_id)
-        if not dep:
-            raise ValueError('Invalid dependency id: %s' % dep_id)
-        if len(dep.dependencies) == 0:
-            return True
-
-        for d in dep.dependencies:
-            if not d.available:
-                return False
-        return True
-
-    def mark_available(self, dep_id):
-        if self.all_dependencies_satisfied(dep_id):
-            self.get_dependency(dep_id).available = True
-            return True
-        raise Exception('Not all dependencies available')
-
-    def get_install_order(self):
-        graph = self.build_dependency_graph()
-        dependencies_order = []
-        for vertex in graph.vertices:
-            out_e = vertex.out_edges()
-            # Locate a vertex that has no edges pointing outwards
-            if not out_e or len(out_e) == 0:
-                # start here
-                sub_ordered_dependencies = self.__get_install_order_sub__(graph, vertex)
-                dependencies_order = dependencies_order + sub_ordered_dependencies
-        return [n.name for n in dependencies_order]
-
-    def __get_install_order_sub__(self, graph, vertex):
-        deps_in_order = []
-        self.__traverse__(graph, vertex, deps_in_order)
-        return deps_in_order
-
-    @staticmethod
-    def __count_unmarked_out_edges__(vertex):
-        uoe_count = 0
-
-        for edge in vertex.out_edges():
-            if not edge.marked():
-                uoe_count += 1
-
-        return uoe_count
-
-    def __traverse__(self, graph, vertex, dep_arr):
-        if vertex.marked():
-            return
-        unm_oe_count = self.__count_unmarked_out_edges__(vertex)
-        visit_vertices = []
-        if unm_oe_count == 0:
-            dep_arr.append(vertex)
-            vertex.mark('added')
-            for edge in vertex.in_edges():
-                edge.mark('resolved')
-                if not edge.tail.marked():
-                    visit_vertices.append(edge.tail)
-
-        for visit_vertex in visit_vertices:
-            self.__traverse__(graph, visit_vertex, dep_arr)
-
-
 class Markable:
 
     def __init__(self):
@@ -541,7 +432,10 @@ class PluginDependenciesManager:
         return self.dependencies_graph.get_vertex(name)
     
     def remove_require(self, dep_name, require, min_version, max_version):
-        pass
+        dep = self.get_dependency(dep_name)
+        if not dep:
+            raise Exception('Dependency %s does not exist' % dep_name)
+        
     
     def remove_dependency(self, dep_name):
         pass
