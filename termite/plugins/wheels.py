@@ -1,4 +1,4 @@
-#    This file is part of Nano Plugins Platform
+#    This file is part of Termite Plugins Platform
 #    Copyright (C) 2014 Pavle Jonoski
 #
 #    This program is free software: you can redistribute it and/or modify

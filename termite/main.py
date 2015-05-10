@@ -7,7 +7,7 @@ from __future__ import print_function
 import argparse
 import sys
 
-from nanopp import metadata
+from termite import metadata
 
 
 def main(argv):

@@ -1,29 +1,29 @@
-nanopp.plugins package
+termite.plugins package
 ======================
 
 Submodules
 ----------
 
-nanopp.plugins.metadata module
+termite.plugins.metadata module
 ------------------------------
 
-.. automodule:: nanopp.plugins.metadata
+.. automodule:: termite.plugins.metadata
     :members:
     :undoc-members:
     :show-inheritance:
 
-nanopp.plugins.support module
+termite.plugins.support module
 -----------------------------
 
-.. automodule:: nanopp.plugins.support
+.. automodule:: termite.plugins.support
     :members:
     :undoc-members:
     :show-inheritance:
 
-nanopp.plugins.wheels module
+termite.plugins.wheels module
 ----------------------------
 
-.. automodule:: nanopp.plugins.wheels
+.. automodule:: termite.plugins.wheels
     :members:
     :undoc-members:
     :show-inheritance:
@@ -32,7 +32,7 @@ nanopp.plugins.wheels module
 Module contents
 ---------------
 
-.. automodule:: nanopp.plugins
+.. automodule:: termite.plugins
     :members:
     :undoc-members:
     :show-inheritance:

@@ -12,7 +12,7 @@ import unittest
 from io import StringIO
 
 
-from nanopp.plugins.support import PluginManifestParser
+from termite.plugins.support import PluginManifestParser
 
 
 class TestPluginManifestParser(unittest.TestCase):

@@ -1,4 +1,4 @@
-# This file is part of Nano Plugins Platform
+# This file is part of Termite Plugins Platform
 #    Copyright (C) 2014 Pavle Jonoski
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -19,12 +19,12 @@ Test
 """
 
 import logging
-from nanopp import metadata
-from nanopp.dependencies import PluginDependenciesManager
-from nanopp.loader import ClassProtocolHandler, PlatformPluginsFinder, register_finder
-from nanopp.plugins.support import PluginLoaderHandler, plugin_references_from_location
-from nanopp.resources import BaseResourceLoader
-from nanopp.tools import Proxy
+from termite import metadata
+from termite.dependencies import PluginDependenciesManager
+from termite.loader import ClassProtocolHandler, PlatformPluginsFinder, register_finder
+from termite.plugins.support import PluginLoaderHandler, plugin_references_from_location
+from termite.resources import BaseResourceLoader
+from termite.tools import Proxy
 
 
 class Plugin:
@@ -90,7 +90,7 @@ class PluginContainer:
         self.plugin_state = None
         self.plugin = None
         self.version = None
-        self.logger = logging.getLogger('nanopp.platform.PluginContainer')
+        self.logger = logging.getLogger('termite.platform.PluginContainer')
 
     def load(self):
         if self.plugin_state == Plugin.STATE_DISPOSED:
@@ -176,7 +176,7 @@ class PluginContainer:
                 self.logger.error('Error on state change in hook: %s. Error: %s', hook, e)
 
     def get_environ(self):
-        return {'__platform__': 'Nanopp'}
+        return {'__platform__': 'termite'}
 
     def state(self):
         if not self.plugin:
@@ -190,7 +190,7 @@ class Platform:
     STATE_SHUTTING_DOWN = 'shutting-down'
 
     def __init__(self, config):
-        self.log = logging.getLogger('nanopp.platform.Platform')
+        self.log = logging.getLogger('termite.platform.Platform')
         self.log.info("Nano Platform %s initializing", metadata.version)
         self.config = config
         self.resource_loader = self.create_resource_loader()
@@ -315,7 +315,7 @@ class Platform:
 
 class PluginManager:
     def __init__(self, resource_loader, plugin_finder):
-        self.log = logging.getLogger('nanopp.platform.PluginManager')
+        self.log = logging.getLogger('termite.platform.PluginManager')
         self.resource_loader = resource_loader
         self.dependencies_manager = PluginDependenciesManager()
         self.plugin_finder = plugin_finder

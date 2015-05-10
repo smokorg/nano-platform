@@ -1,4 +1,4 @@
-# This file is part of Nano Plugins Platform
+# This file is part of Termite Plugins Platform
 #    Copyright (C) 2014 Pavle Jonoski
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -18,7 +18,7 @@ import abc
 from os.path import isdir
 import os.path
 from os import listdir
-from nanopp.resources import BaseResourceLoader, ProtocolHandler
+from termite.resources import BaseResourceLoader, ProtocolHandler
 
 __author__ = 'pavle'
 
@@ -42,16 +42,16 @@ Requires-Plugins: <RequiresEntrySpec>,...
 
 Example:
 
-Plugin-Id: nanopp.interactive-shell
+Plugin-Id: termite.interactive-shell
 Version: 0.1.1
-Plugin-Classes: nanopp.interactive.ShellPlugin,nanopp.interactive.TelnetPlugin
-Requires: nanopp.* [0.0.1, 1.0);
-Exports: nanopp.remote.*(1.0.0); nanopp.tools(1.0.0)
-Requires-Plugins: nanopp.network-support (1,3]
+Plugin-Classes: termite.interactive.ShellPlugin,termite.interactive.TelnetPlugin
+Requires: termite.* [0.0.1, 1.0);
+Exports: termite.remote.*(1.0.0); termite.tools(1.0.0)
+Requires-Plugins: termite.network-support (1,3]
 
 """
 
-logger = logging.getLogger('nanopp.plugins.support')
+logger = logging.getLogger('termite.plugins.support')
 
 
 class Entry:

@@ -8,8 +8,8 @@ from pytest import raises
 import pytest
 parametrize = pytest.mark.parametrize
 
-from nanopp import metadata
-from nanopp.main import main
+from termite import metadata
+from termite.main import main
 
 
 class TestMain(object):

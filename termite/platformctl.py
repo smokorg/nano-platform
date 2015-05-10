@@ -2,8 +2,8 @@ import argparse
 
 from configparser import ConfigParser
 import logging
-from nanopp import metadata
-from nanopp.platform import Platform
+from termite import metadata
+from termite.platform import Platform
 
 __author__ = 'pavle'
 

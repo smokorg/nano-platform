@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """It does cool things"""
 
-from nanopp import metadata
+from termite import metadata
 
 
 __version__ = metadata.version

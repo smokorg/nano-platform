@@ -1,4 +1,4 @@
-#    This file is part of Nano Plugins Platform
+#    This file is part of Termite Plugins Platform
 #    Copyright (C) 2014 Pavle Jonoski
 #
 #    This program is free software: you can redistribute it and/or modify
@@ -22,13 +22,13 @@ import re
 import threading
 import sys
 import os.path
-from nanopp.resources import ProtocolHandler
+from termite.resources import ProtocolHandler
 
 __local_context = threading.local()
 __original_import__ = __import__
 
 # constants
-IMPORT_CONTEXT = "nanopp.IMPORT_CONTEXT"
+IMPORT_CONTEXT = "termite.IMPORT_CONTEXT"
 
 
 def put_to_context(key, value):

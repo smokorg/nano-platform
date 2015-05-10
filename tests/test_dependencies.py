@@ -2,7 +2,7 @@ from logging import DEBUG
 import logging
 import sys
 from unittest.case import TestCase
-from nanopp.dependencies import DependenciesManager, Graph, Vertex, PluginDependenciesManager
+from termite.dependencies import DependenciesManager, Graph, Vertex, PluginDependenciesManager
 
 __author__ = 'pavle'
 

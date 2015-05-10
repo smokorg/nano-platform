@@ -1,4 +1,4 @@
-nanopp package
+termite package
 ==============
 
 Subpackages
@@ -6,71 +6,71 @@ Subpackages
 
 .. toctree::
 
-    nanopp.plugins
+    termite.plugins
 
 Submodules
 ----------
 
-nanopp.dependencies module
+termite.dependencies module
 --------------------------
 
-.. automodule:: nanopp.dependencies
+.. automodule:: termite.dependencies
     :members:
     :undoc-members:
     :show-inheritance:
 
-nanopp.loader module
+termite.loader module
 --------------------
 
-.. automodule:: nanopp.loader
+.. automodule:: termite.loader
     :members:
     :undoc-members:
     :show-inheritance:
 
-nanopp.main module
+termite.main module
 ------------------
 
-.. automodule:: nanopp.main
+.. automodule:: termite.main
     :members:
     :undoc-members:
     :show-inheritance:
 
-nanopp.metadata module
+termite.metadata module
 ----------------------
 
-.. automodule:: nanopp.metadata
+.. automodule:: termite.metadata
     :members:
     :undoc-members:
     :show-inheritance:
 
-nanopp.platform module
+termite.platform module
 ----------------------
 
-.. automodule:: nanopp.platform
+.. automodule:: termite.platform
     :members:
     :undoc-members:
     :show-inheritance:
 
-nanopp.platformctl module
+termite.platformctl module
 -------------------------
 
-.. automodule:: nanopp.platformctl
+.. automodule:: termite.platformctl
     :members:
     :undoc-members:
     :show-inheritance:
 
-nanopp.resources module
+termite.resources module
 -----------------------
 
-.. automodule:: nanopp.resources
+.. automodule:: termite.resources
     :members:
     :undoc-members:
     :show-inheritance:
 
-nanopp.tools module
+termite.tools module
 -------------------
 
-.. automodule:: nanopp.tools
+.. automodule:: termite.tools
     :members:
     :undoc-members:
     :show-inheritance:
@@ -79,7 +79,7 @@ nanopp.tools module
 Module contents
 ---------------
 
-.. automodule:: nanopp
+.. automodule:: termite
     :members:
     :undoc-members:
     :show-inheritance:

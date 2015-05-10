@@ -34,16 +34,16 @@ except ImportError:
 sys.path.append('.')
 
 ## Constants
-CODE_DIRECTORY = 'nanopp'
+CODE_DIRECTORY = 'termite'
 DOCS_DIRECTORY = 'docs'
 TESTS_DIRECTORY = 'tests'
 PYTEST_FLAGS = ['--doctest-modules']
 
 # Import metadata. Normally this would just be:
 #
-#     from nanopp import metadata
+#     from termite import metadata
 #
-# However, when we do this, we also import `nanopp/__init__.py'. If this
+# However, when we do this, we also import `termite/__init__.py'. If this
 # imports names from some other modules and these modules have third-party
 # dependencies that need installing (which happens after this file is run), the
 # script will crash. What we do instead is to load the metadata module by path
@@ -261,11 +261,11 @@ setup_dict = dict(
     zip_safe=False,  # don't use eggs
     entry_points={
         'console_scripts': [
-            'nanopp_cli = nanopp.main:entry_point'
+            'termite_cli = termite.main:entry_point'
         ],
         # if you have a gui, use this
         # 'gui_scripts': [
-        #     'nanopp_gui = nanopp.gui:entry_point'
+        #     'termite_gui = termite.gui:entry_point'
         # ]
     }
 )

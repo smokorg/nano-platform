@@ -11,7 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-.. automodule:: nanopp
+.. automodule:: termite
 
 Indices and tables
 ==================

@@ -1,7 +1,7 @@
-nanopp
+termite
 ======
 
 .. toctree::
    :maxdepth: 4
 
-   nanopp
+   termite
