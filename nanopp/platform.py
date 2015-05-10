@@ -20,7 +20,7 @@ Test
 
 import logging
 from nanopp import metadata
-from nanopp.dependencies import DependenciesManager
+from nanopp.dependencies import PluginDependenciesManager
 from nanopp.loader import ClassProtocolHandler, PlatformPluginsFinder, register_finder
 from nanopp.plugins.support import PluginLoaderHandler, plugin_references_from_location
 from nanopp.resources import BaseResourceLoader
@@ -317,9 +317,8 @@ class PluginManager:
     def __init__(self, resource_loader, plugin_finder):
         self.log = logging.getLogger('nanopp.platform.PluginManager')
         self.resource_loader = resource_loader
+        self.dependencies_manager = PluginDependenciesManager()
         self.plugin_finder = plugin_finder
-        self.modules_dependencies = DependenciesManager()
-        self.plugins_dependencies = DependenciesManager()
         self.plugins_by_ref = {}
         self.plugins_by_id = {}
         self.all_exports = {}
@@ -376,7 +375,7 @@ class PluginManager:
 
     def install_all_plugins(self):
         self.log.debug('Installing all plugins...')
-        install_order = self.dependencies_manager.get_install_order()
+        install_order = self.dependencies_manager.reverese_dependency_order()
         self.log.info('Installing plugins in the following order: %s' % install_order)
         for p_id in install_order:
             self.log.info('Installing plugin: %s' % p_id)
@@ -393,27 +392,7 @@ class PluginManager:
         return plugin
 
     def __build_dependecies__(self, plugin_container):
-        plugin_id = plugin_container.plugin_id
-        dependencies = []
-        for imp in plugin_container.manifest.requires:
-            satisfied = False
-            self.all_requires[imp] = plugin_container
-            for export, p_c in self.all_exports.items():
-                if export.satisfies(imp):
-                    dependencies.append(p_c.plugin_id)
-                    satisfied = True
-                    break
-            if not satisfied:
-                raise UnsatisfiedDependencyException(
-                    'Required module <%s> stated in plugin [%s] cannot be satisfied.' % (imp, plugin_id))
-
-        for plugin_dep in plugin_container.manifest.requires_plugins:
-            req_plugin = self.__locate_plugin_for_import__(plugin_dep)
-            if not req_plugin:
-                raise UnsatisfiedDependencyException('Required plugin <%s> is not available' % plugin_dep)
-            dependencies.append(req_plugin.plugin_id)
-
-        self.dependencies_manager.add_dependency(plugin_id, dependencies, plugin_container)
+        pass
 
     def __build_plugin_dependencies__(self, plugin_container):
         plugin_id = plugin_container.plugin_id
