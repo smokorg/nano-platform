@@ -247,43 +247,6 @@ class Graph:
         return len(self.find_circular_rings()) > 0
 
 
-class Dependency:
-
-    def __init__(self, dep_name, depends_on=None, ref=None):
-        self.name = dep_name
-        self.dependencies = depends_on or []
-        self.ref = ref
-        self.dependants = []
-        self.available = False
-        
-        if not len(self.dependencies):
-            self.available = True
-
-    def check_available(self):
-        for dep in self.dependencies:
-            if not dep.available:
-                return False
-        return True
-
-
-class VersionedDependency(Dependency):
-
-    def __init__(self, dep_name, version, min_version=None, max_version=None, depends_on=None, ref=None):
-        super(Dependency, self).__init__(dep_name, depends_on, ref)
-        self.version = version
-        self.min_version = min_version if isinstance(min_version, tuple) else (min_version, True)
-        self.max_version = max_version if isinstance(max_version, tuple) else (max_version, True)
-
-    def is_satisfied_with(self, v_dep):
-        min_v, min_incl = self.min_version
-        max_v, max_incl = self.max_version
-        satisfied = v_dep.version >= min_v if min_incl else v_dep.version > min_v
-        if not satisfied:
-            return False
-        satisfied = v_dep.version <= max_v if max_incl else v_dep.version < max_v
-        return satisfied
-
-
 # ### Plugin dependencies ###
 
 class PluginDependency(Vertex):
@@ -440,11 +403,10 @@ class PluginDependenciesManager:
     def remove_dependency(self, dep_name):
         pass
     
-class ServiceDependency(Dependency):
+class ServiceDependency():
 
     def __init__(self, service_name, depends_on, factory=None):
-        super(ServiceDependency, self).__init__(dep_name=service_name, depends_on=depends_on)
-        self.factory = factory
+        pass
 
     def make_available(self):
         if not (self.ref or self.factory):
