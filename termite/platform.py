@@ -336,7 +336,22 @@ class PluginManager:
             self.plugins_by_ref[plugin_ref] = pc
             self.plugins_by_id[pc.plugin_id] = pc
             self.__build_dependecies__(pc)
-
+    
+    def __load_dependencies__(self, pc):
+        dm = self.dependencies_manager
+        dm.dependency(pc.plugin_id)
+        dm.add_provider(pc.plugin_id, pc.manifest.version, pc)
+        # add all requires as dependencies
+        for rq in pc.manifest.requires:
+            req_dep = dm.dependency(pc.plugin_id)
+            dm.require(pc.plugin_id, rq.name, rq.version_range[0], rq.version_range[1])
+        
+        # add all exports as providers as well
+        for exp in pc.manifest.exports:
+            xdp = dm.dependency(exp.name)
+            dm.add_provider(xdp.name, exp.version, pc)
+        
+    
     def reload_plugin(self, plugin_id, plugin_container):
         old_plugin = self.plugins_by_id[plugin_id]
         del self.plugins_by_id[plugin_id]
@@ -392,21 +407,6 @@ class PluginManager:
         return plugin
 
     def __build_dependecies__(self, plugin_container):
-        pass
-
-    def __build_plugin_dependencies__(self, plugin_container):
-        plugin_id = plugin_container.plugin_id
-        dependencies = []
-        for imp in plugin_container.manifest.requires_plugins:
-            pass
-        
-    def __build_modules_dependencies__(self, plugin_container):
-        pass
-    
-    def __release_plugin_dependencies__(self, plugin_container):
-        pass
-        
-    def __release_modules_dependencies__(self, plugin_container):
         pass
         
     
