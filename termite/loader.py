@@ -218,11 +218,11 @@ class ClassLoader:
         self.import_fn = import_fn
 
     def load_class(self, class_name):
-        print('class_name=%s' % class_name)
+        #print('class_name=%s' % class_name)
         if not class_name:
             raise ValueError('Class name must be given')
         package, dot, clazz = class_name.rpartition('.')
-        print('pkg=%s, class=%s' % (package,clazz))
+        #print('pkg=%s, class=%s' % (package,clazz))
         if not package:
             # FIXME: Research what happens if classes with no package are loaded
             raise ValueError('Unable to load top-level classes')

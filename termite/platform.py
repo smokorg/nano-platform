@@ -390,11 +390,16 @@ class PluginManager:
 
     def install_all_plugins(self):
         self.log.debug('Installing all plugins...')
-        install_order = self.dependencies_manager.reverese_dependency_order()
-        self.log.info('Installing plugins in the following order: %s' % install_order)
-        for p_id in install_order:
-            self.log.info('Installing plugin: %s' % p_id)
-            self.install_plugin(p_id)
+        install_order_deps = self.dependencies_manager.reverese_dependency_order()
+        prov_set = set()
+        for pd in install_order_deps:
+            for version, providers in pd.providers.items():
+                for provider in providers:
+                    prov_set.add(provider)
+        self.log.info('Installing plugins in the following order: %s' % prov_set)
+        for pc in prov_set:
+            self.log.info('Installing plugin: %s' % pc.plugin_id)
+            self.install_plugin(pc.plugin_id)
         self.log.info('Plugins installed')
 
     def get_all_plugins(self):
@@ -407,7 +412,7 @@ class PluginManager:
         return plugin
 
     def __build_dependecies__(self, plugin_container):
-        pass
+        self.__load_dependencies__(plugin_container)
         
     
     def build_dependencies(self):
@@ -436,10 +441,10 @@ class PluginManager:
         return None
 
     def __mark_available__(self, plugin_container):
-        self.dependencies_manager.mark_available(plugin_container.plugin_id)
+        # self.dependencies_manager.mark_available(plugin_container.plugin_id)
         #for exp in plugin_container.manifest.exports:
         #    self.dependencies_manager.mark_available(exp.name)
-
+        pass
 
 class PlatformException(Exception):
     pass

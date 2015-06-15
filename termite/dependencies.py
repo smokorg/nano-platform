@@ -321,12 +321,14 @@ class PluginDependenciesManager:
 
     def __init__(self):
         self.dependencies_graph = Graph()
+        self.log = logging.getLogger('dependencies.PluginDependenciesManager')
 
     def dependency(self, name, providers=None):
         dep = self.dependencies_graph.get_vertex(name)
         if not dep:
             dep = self.__new_dependency__(name, providers)
             self.dependencies_graph.add_vertex(dep)
+        self.log.debug('Dependency %s registered', dep)
         return dep
     
     def add_provider(self, dep_name, version, provider):
@@ -341,6 +343,7 @@ class PluginDependenciesManager:
         for req in dep.in_edges():
             if req.is_satisfied_with(version):
                 req.mark_satisfied()
+        self.log.debug('Added provider for %s, version %s - %s', dep, version, provider)
     
     def require(self, dep_name, require, min_version, max_version):
         """ Dependency dep_name requires require in range min_version to max_version
@@ -366,6 +369,7 @@ class PluginDependenciesManager:
         for dep in graph.vertices:
             self.__follow__(dep, order)
         
+        #return [o.name for o in order]
         return order
     
     def __follow__(self, v_parent, list_in_order):
@@ -399,6 +403,12 @@ class PluginDependenciesManager:
         if not dep:
             raise Exception('Dependency %s does not exist' % dep_name)
         
+    
+    def all_dependencies_satisfied(self, dep_name):
+        dep = self.get_dependency(dep_name)
+        if dep:
+            return dep.dependencies_satisfied()
+        return False
     
     def remove_dependency(self, dep_name):
         pass
