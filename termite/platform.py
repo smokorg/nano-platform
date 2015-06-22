@@ -182,7 +182,9 @@ class PluginContainer:
         if not self.plugin:
             return self.plugin.state
         return None
-
+    
+    def __str__(self):
+        return 'PluginContainer {%s, %s (%s)}' % (self.plugin_id, self.version, self.plugin_ref)
 
 class Platform:
     STATE_INITIALIZING = 'initializing'
@@ -396,7 +398,7 @@ class PluginManager:
             for version, providers in pd.providers.items():
                 for provider in providers:
                     prov_set.add(provider)
-        self.log.info('Installing plugins in the following order: %s' % prov_set)
+        self.log.info('Installing plugins in the following order: %s' % [p.plugin_id for p in prov_set])
         for pc in prov_set:
             self.log.info('Installing plugin: %s' % pc.plugin_id)
             self.install_plugin(pc.plugin_id)

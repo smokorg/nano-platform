@@ -23,6 +23,7 @@ import threading
 import sys
 import os.path
 from termite.resources import ProtocolHandler
+import logging
 
 __local_context = threading.local()
 __original_import__ = __import__
@@ -72,6 +73,7 @@ class BaseFinder:
 
     def __init__(self):
         self.loader_entries = []
+        self.log = logging.getLogger('loader.BaseFinder')
 
     def find_module(self, fullname, path=None):
         for entry in self.loader_entries:
@@ -80,6 +82,7 @@ class BaseFinder:
         return None
 
     def add_loader(self, loader_entry):
+        self.log.debug('Added loader: %s', loader_entry)
         self.loader_entries.append(loader_entry)
 
     def add_restricted_paths(self, path_patterns):
@@ -110,7 +113,13 @@ class LoaderEntry:
             if pattern.match(path):
                 return True
         return False
-
+    
+    def __str__(self):
+        return 'LoaderEntry[paths=(%s), loader=%s]' % \
+            (str(self.path_patterns), str(self.loader))
+    
+    def __repr__(self):
+        return self.__str__()
 
 class RestrictedEntryLoader:
 
@@ -150,9 +159,11 @@ class PlatformPluginsFinder(BaseFinder):
     def __init__(self, restricted_modules):
         super(PlatformPluginsFinder, self).__init__()
         self.plugins = {}
+        self.log = logging.getLogger('loader.PlatformPluginsFinder')
         restricted_modules = restricted_modules or []
         for restricted_path in restricted_modules:
             self.add_restricted_paths(restricted_path)
+        self.log.info('PlatformPluginsFinder set up')
 
     def add_plugin(self, plugin_container):
         if self.plugins.get(plugin_container.plugin_id):
@@ -210,7 +221,12 @@ class PluginLoader(BaseLoader):
     
     def is_package(self, fullname):
         return self.plugin_container.plugin.is_package(fullname)
-
+    
+    def __str__(self):
+        return 'PluginLoader[plugin=%s]' % self.plugin_container
+    
+    def __repr__(self):
+        return self.__str__()
 
 class ClassLoader:
 
@@ -222,7 +238,6 @@ class ClassLoader:
         if not class_name:
             raise ValueError('Class name must be given')
         package, dot, clazz = class_name.rpartition('.')
-        #print('pkg=%s, class=%s' % (package,clazz))
         if not package:
             # FIXME: Research what happens if classes with no package are loaded
             raise ValueError('Unable to load top-level classes')
@@ -241,9 +256,11 @@ class ClassProtocolHandler(ProtocolHandler):
     def load(self, path, *args, **kwargs):
         return self.class_loader.load_class(path)
 
+log = logging.getLogger('loader')
 
 def register_finder(finder):
     sys.meta_path.insert(0, finder)
+    log.debug('Registered finder %s', finder)
 
 
 def unregister_finder(finder):
@@ -251,3 +268,4 @@ def unregister_finder(finder):
         sys.meta_path.remove(finder)
     except ValueError:
         pass
+    log.debug('Finder %s unregistered', finder)
