@@ -1,0 +1,6 @@
+Plugin-Id: plugin.B
+Version: 0.1
+Plugin-Classes:
+Requires:
+Exports:modb[1]
+Requires-Plugins:
