@@ -20,3 +20,8 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+Platfom Specification
+=====================
+`Plugin Interface`_
+
+.. _Plugin Interface: platform-specification/plugin-interface
