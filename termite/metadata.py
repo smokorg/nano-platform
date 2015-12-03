@@ -16,3 +16,15 @@ emails = ['jonoski.pavle@gmail.com']
 license = 'GPLv3'
 copyright = '2014 ' + authors_string
 url = 'http://termite-platform.org'
+logo_ascii = """
+    \       /
+     \ /^\ /
+      (   )  
+        =         Termite Platform
+   \__ === __/         
+   __  =-=  __
+_/  _ ==-== _ \_
+   |  =---=  | 
+  /   =---=   \        SmokOrg (c)
+       === 
+"""

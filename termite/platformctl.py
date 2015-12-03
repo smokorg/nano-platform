@@ -62,6 +62,7 @@ def ctl_main():
     args = parser.parse_args()
     if args.verbose:
         logging.basicConfig(level=logging.DEBUG, format='[%(levelname)7s] %(asctime)s - %(name)s: %(message)s')
+    logging.info(metadata.logo_ascii)
     platform = create_platform_instance(args)
     platform.start()
     platform.shutdown()
