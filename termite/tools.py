@@ -11,7 +11,8 @@ class Proxy:
     wrapper is returned back to the requestor.
     For the requesting party, the proxy object follows the same interface as the 
     original object type. Some special methods that belong specifically to the 
-    Proxy type are black-listed and will not be returned if requested.
+    Proxy type are available and will not be proxied (see the list of 
+    NATIVE_METHODS).
     
     There are three extension points defined by the proxy that add facilities for
     interception of the interaction:
@@ -25,6 +26,10 @@ class Proxy:
     NATIVE_METHODS = ['target', '__method_call_wrapper__', 'on_method_call', 'on_property', 'on_missing' ,'__init__']
 
     def __init__(self, target):
+        """Creates new proxy object around the target object.
+        
+        target is the original object for which to create the Proxy.
+        """
         self.target = target
 
     def __getattribute__(self, name):
@@ -41,20 +46,71 @@ class Proxy:
             return self.on_missing(name)
     
     def __method_call_wrapper__(self, name, handler, actual_method):
+        """Creates a wrapper around the method call handler that curries the
+        the method name and the actual method reference before the actual 
+        arguments to the method invocation.
+        """
         def method_wrapper(*args, **kwargs):
             return handler(name, actual_method, *args, **kwargs)
         return method_wrapper
     
     def on_method_call(self, name, actual_method, *args, **kwargs):
+        """Called every time a method is called on the proxy and exists in the target.
+        
+        This is intended to be overriden in a subclass when extending. This method
+        does not have to be implemented by any extending class. By default it
+        will call the actual method from the proxied instance.
+        
+        name is the name of the called method.
+        
+        actual_method is an actual reference to the method from the underlying
+        target method.
+        
+        args is a tupple of the arguments passed to the method call.
+        
+        kwargs is a dictionary of the arguments passed to the method call.
+        
+        By default returns the actual result of the method call. 
+        """
         return actual_method(*args, **kwargs)
     
     def on_property(self, name, prop_value):
+        """Called every time a property is requested and exists in the target.
+        
+        This method is intended to be implemented in an extending class. By
+        default it will return the actual reference to the property of the 
+        proxied instance.
+        
+        name is the name of the requested property.
+        
+        prop_value is the actual value (reference) of the property in the proxied
+        object
+        
+        By default returns the actual value of the property in the proxied object.
+        """
         return prop_value
     
     def on_missing(self, name):
+        """Called when a request is being made to a non-existing property or method
+        in the proxied object.
+        
+        Since it cannot be determined whether the request is for a property (to 
+        get or set a value) or a method call, only the name of the requested 
+        attribute is passed down to the call.
+        
+        name is the name of the property or method being requested.
+        
+        Returns a reference to a no-operation property. This is a callable instance
+        that when called does not perform any operation (NOOP), but is not None.
+        """
         return Proxy.__NOOP__property__()
 
     class __NOOP__property__:
-
+        """No-operation callable.
+        
+        Defines a callable object that does not perform any operation.
+        """
         def __call__(self, *args, **kwargs):
+            """Performs no operation, just pass the execution.
+            """
             pass
