@@ -15,7 +15,8 @@
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 """
-Test
+Termite Platform package. Defines the plugins, plugin container and the platform
+interface.
 """
 
 import logging
@@ -69,17 +70,69 @@ class Plugin:
     """
 
     def activate(self):
+        """Called to activate the plugin.
+        
+        This method is called once the plugin has been installed and all of the 
+        declared dependencies have been resolved and are available.
+        
+        If the method raises an error, the activation of the plugin will be 
+        canceled and the plugin will be put in an ERROR state.
+        
+        This method is intended to be implemented in a subclass.
+        """
         pass
 
     def deactivate(self):
+        """Called to deactivate the plugin.
+        
+        This method is called when the plugin is ready to be deactivated and no
+        longer will be used by the platform.
+        
+        This method is intended to be implemented in a subclass. Typical usage
+        would be to free any used resources by the plugin and to perform a final
+        shutdown procedure.
+        
+        If an error is raised by this method, the plugin will be put in an ERROR
+        state.
+        """
         pass
 
     def on_state_change(self, state):
+        """Called every time when the plugin state chnages.
+        
+        state is the new state of the plugin.
+        """
         pass
 
 
 class PluginContainer:
+    """Wrapper around a real plugin instance.
+    
+    The platform does not interact directly with the plugin instances, but 
+    interacts with a PluginContainer instace instead. The plugin container 
+    provides a sandbox around a plugin and maintains a state and context that is
+    of relevance to the plugin platform, but is not directly a concern of the 
+    plugin itself. This way there is a separation of concerns - the plugin 
+    handles and performs functions of relevance to the business and the 
+    container handles the plugin management context.
+    
+    The plugin container maintains the plugin state and metadata for the plugin
+    itself (version, the manifest file, plugin loader, dependencies etc).
+    """
     def __init__(self, plugin_ref, resource_loader, plugin_manager):
+        """Creates new instance of a PluginContainer.
+        
+        plugin_ref is a refrence to a real plugin, usually a refrence to a 
+        plugin physical resource. Most of the time this will be a relevant URL 
+        to the plugin resource itself. The plugin_ref is a unique identifier for
+        a particular plugin (it cannot point to more than one plugin and no more
+        than one plugin can have the same reference).
+        
+        resource_loader the ResourceLoader used to load the actual plugin 
+        resource. See termite.resources.BaseResourceLoader for more details.
+        
+        plugin_manager the PluginManager that manages this plugin container.
+        """
         self.loader = resource_loader
         self.plugin_ref = plugin_ref
         self.plugin_manager = plugin_manager
@@ -93,6 +146,18 @@ class PluginContainer:
         self.logger = logging.getLogger('termite.platform.PluginContainer')
 
     def load(self):
+        """Loads the plugin onto the platform.
+        
+        Loads the plugin resource using the ResourceManager and initialized the 
+        plugin state. 
+        
+        Note that no plugin instances are attempted to be created and no actual
+        code from the plugin is executed at this point. This loads the metadata
+        descrribing the plugin itself.
+        
+        At this point, although the plugin is loaded, it is not yet available 
+        as a dependency on the platform.
+        """
         if self.plugin_state == Plugin.STATE_DISPOSED:
             raise PluginLifecycleException("Plugin already disposed")
 
@@ -103,6 +168,18 @@ class PluginContainer:
         self.plugin_state = Plugin.STATE_UNINSTALLED
 
     def install(self):
+        """Installs the plugin onto the platform.
+        
+        The plugin dependencies must be available in order for the plugin to be
+        installed. 
+        
+        Once the dependecies are resolved, the plugin hooks are created and the 
+        plugin state is set to INSTALLED. 
+        
+        Raises a PluginLifecycleException if the plugin is not in the proper 
+        state for installation. Refer to the plugin state diagram for the 
+        allowed states and transitions.
+        """
         if self.plugin_state is not Plugin.STATE_UNINSTALLED:
             raise PluginLifecycleException("Cannot install plugin. Invalid state: %s" % str(self.plugin_state))
         try:
