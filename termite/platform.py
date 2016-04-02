@@ -192,6 +192,15 @@ class PluginContainer:
             raise e
 
     def create_hooks(self):
+        """Instantiates the plugin hooks.
+        
+        A plugin hook is an object which life-cycle is managed by the platform.
+        This is the entry point to to plugin.
+        
+        A plugin hook can be specified by type (class). The class must be 
+        defined in the plugin modules. The hooks are specified in the plugin 
+        manifest file in the section "Plugin-Classes".
+        """
         manifest = self.plugin.get_manifest()
         for hook_class_name in manifest.plugin_classes:
             hook_class = self.loader.load('class:' + hook_class_name)
@@ -207,6 +216,15 @@ class PluginContainer:
         pass
 
     def activate(self):
+        """Activates the plugin.
+        
+        A plugin can be activated only it was alerady successfully installed.
+        A deactivated plugin may be activated again (but that would mean that 
+        the plugin was already installed earlier, before the first activation).
+        
+        When activated, if the plugin exposes any hooks, on each hook instance
+        the method "activate" will be invoked.
+        """
         if self.plugin_state is not Plugin.STATE_INSTALLED and self.plugin_state is not Plugin.STATE_DEACTIVATED:
             raise PluginLifecycleException("Cannot activate plugin. Invalid state: %s" % str(self.plugin_state))
         try:
@@ -220,6 +238,14 @@ class PluginContainer:
             self.notify_state_change(Plugin.STATE_DEACTIVATED)
 
     def deactivate(self):
+        """Deactivates a plugin.
+        
+        Only an active plugin can be deactivated. If the plugin is not in ACTIVE
+        state, an error would be raised.
+        
+        If the plugin exposes any hooks, on each hook instance the method 
+        "deactivate" will be invoked.
+        """
         if self.plugin_state is not Plugin.STATE_ACTIVE:
             raise PluginLifecycleException("Cannot deactivate plugin. Invalid state: %s" % str(self.plugin_state))
 
@@ -232,12 +258,24 @@ class PluginContainer:
         self.notify_state_change(Plugin.STATE_DEACTIVATED)
 
     def uninstall(self):
+        """Uninstalls a plugin.
+        
+        Once uninstalled, the plugin will no loger be considered as a part of 
+        the platform and cannot provide any dependencies.
+        """
         if self.plugin_state not in [Plugin.STATE_DEACTIVATED, Plugin.STATE_INSTALLED]:
             raise PluginLifecycleException("Cannot uninstall plugin. Invalid state: %s" % str(self.plugin_state))
         self.plugin_state = Plugin.STATE_UNINSTALLED
         self.notify_state_change(Plugin.STATE_UNINSTALLED)
 
     def dispose(self):
+        """Disposes a plugin.
+        
+        When disposing a plugin, the references to the plugin hooks (if any) 
+        will be deleted so they would be garbadge-collected. Also the references
+        to the plugin metadata will be deleted. Once disposed, the plugin cannot
+        be re-installed or reused in any way - it awaits final destruction.
+        """
         if self.plugin_state is not Plugin.STATE_UNINSTALLED:
             raise PluginLifecycleException("Cannot dispose plugin. Invalid state: %s" % str(self.plugin_state))
         self.plugin_state = Plugin.STATE_DISPOSED
@@ -246,6 +284,9 @@ class PluginContainer:
         self.plugin = None
 
     def notify_state_change(self, state):
+        """Notifies the plugin hooks if a change in the state of the plugin 
+        occurs.
+        """
         for hook in self.plugin_hooks:
             try:
                 hook.on_state_change(state)
@@ -253,15 +294,31 @@ class PluginContainer:
                 self.logger.error('Error on state change in hook: %s. Error: %s', hook, e)
 
     def get_environ(self):
+        """Returns the sandbox environment of the plugin.
+        
+        Once a plugin is created, all of its hooks live in a sandboxed 
+        environment. This means that the access to other modules (outside the 
+        plugin native modules) is in the loose sense managed (or in the strctest
+        sense constrained) and there have access only to a couple of globals. 
+        This method defines the globals for the plugin hooks instances.
+        
+        If inside a plugin, you can make sure that you're running on the termite
+        platforum by checking for the global '__platform__' that will be set to
+        the value "termite".
+        
+        """
         return {'__platform__': 'termite'}
 
     def state(self):
-        if not self.plugin:
+        """Returns the current state of the plugin.
+        """
+        if self.plugin:
             return self.plugin.state
         return None
     
     def __str__(self):
         return 'PluginContainer {%s, %s (%s)}' % (self.plugin_id, self.version, self.plugin_ref)
+
 
 class Platform:
     STATE_INITIALIZING = 'initializing'
