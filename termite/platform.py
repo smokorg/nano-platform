@@ -321,23 +321,93 @@ class PluginContainer:
 
 
 class Platform:
+    """Represents a single plugins platform.
+    
+    A platform manages a set of plugins. It manages the plugins life cycle (
+    installation, activation, uninstallation, deactivation, disposal), manages
+    the plugins sandboxes - access to specific resources and global shared 
+    state, manages the plugins access to other plugins packages and modules and
+    also manages the plugin dependencies.
+    
+    This type is the main entry point for creating and managing the plugins 
+    system. It provides interface for starting and shutting down the system
+    (platform) and for inducing a certaing system-wide state change such as
+    installing all plugins, deactivating all plugins and so on.
+    
+    The platform delegates the actual plugin life-cycle management to a plugin 
+    manager (see termite.platform.PluginManager). 
+    The resource management is delegated to a resource loader 
+    (see termite.resources.ResourceLoader). 
+    The access to exposed packages and modules of a plugin is provided and 
+    managed by a special loader-finder object (see 
+    termite.loader.PlatformPluginsFinder).
+    
+    
+    Configuration
+    
+    The platform is initiated with a configuration ojbect. The following are 
+    some of the most important configuration properties:
+        * Section "platform":
+            * plugins-dir - a list of directiories that contain plugins. The 
+            directories names should be separated by comma (,).
+            * restricted-modules - a list of restricted python modules. These
+            modules will not be available to any plugin on the platform. This
+            is a comma (,) separated list of modules names.
+    
+    
+    Typical usage
+    
+    Typically you want to create an instance of the Platform to manage your 
+    plugins. In most cases youll need only one instance of the platform per 
+    application. The creation of a platform object may look like this:
+    
+        configuration = ConfigParser()
+        configuration.read('platform.ini')
+        
+        platform = Platform(configuration)
+        
+        platform.start()
+    
+    All of the plugins are isolated to this platform instance. Each plugin lives
+    in a sandboxed space with its own globals/locals ultimately managed by the 
+    platform instance. Only a few global object will be shared between the 
+    plugins - for example some modules of the underlying Python path may be 
+    shared (even between different platform instances if they run in the same
+    interpreter).
+     
+    """
     STATE_INITIALIZING = 'initializing'
     STATE_ACTIVE = 'active'
     STATE_SHUTTING_DOWN = 'shutting-down'
 
     def __init__(self, config):
         self.log = logging.getLogger('termite.platform.Platform')
-        self.log.info("Nano Platform %s initializing", metadata.version)
+        self.log.info("Termite Platform %s initializing", metadata.version)
         self.config = config
         self.resource_loader = self.create_resource_loader()
         self.plugins_finder = self.create_plugin_finder()
         self.plugins_manager = PluginManager(self.resource_loader, self.plugins_finder)
         self.state = Platform.STATE_INITIALIZING
 
-        # the init wa successful
+        # the init was successful
         self.success_init()
 
     def start(self):
+        """Starts the plugin platform.
+        
+        The startup process of the platform can be summed up in the following
+        steps:
+            1. The platform locates the plugins from the plugin directories. The
+            plugins may be in different formats (as exploded directory, as some
+            kind of archive).
+            2. The platform loads the plugins. This means that each plugin 
+            content is loaded (at least partially) and the metadata is obtained
+            (usually the plugin manifest file is read).
+            3. The platform installs the plugins. This step checks for plugin
+            dependecies. Usually a dependency graph is created and an order of
+            installtion is established.
+            4. The platform activates the installed plugins.
+        """
         # locate all plugins
         # load all plugins
         # install all plugins
@@ -349,16 +419,37 @@ class Platform:
         self.log.info('Platform started')
 
     def shutdown(self):
+        """Shuts down the platform and all plugins managed by it.
+        
+        Performs basically the reverse operation of the "start" method. The
+        shut down of the platform follow these steps:
+            1. Deactivates all the plugins. All active plugins will be notified 
+            to deactivate and perform theirs deactivation procedure. Waits for
+            all plugins to finish the deactivation.
+            2. Uninstalls all installed plugins. This frees up the resources and
+            destroys the dependency graph.
+            3. Destroys all plugins. This releases the resources taken up by
+            the plugin loading process.
+            4. Performs garbagde collection on any still allocated resources 
+            before shutting down completely.
+        """
         self.log.info('Platform shutting down...')
         self.deactivate_all_plugins()
         self.uninstall_all_plugins()
-        self.deactivate_all_plugins()
+        self.destroy_all_plugins()
         self.plugins_manager.gc()
         self.log.info('Platform shutdown complete.')
 
     # helper methods
 
     def load_all_plugins(self):
+        """Scans the plugin directories for plugins and loads the plugins.
+        
+        Scans each location for plugins and extracts the plugins references from
+        each location. Each plugin reference is then registered with the 
+        PluginManager which performs the actual loading of the plugin by its 
+        reference.
+        """
         locations = self.config.get('platform', 'plugins-dir', fallback='').split(',') or []
         self.log.info('Loading plugins from these locations: %s' % locations)
         all_refs = []
@@ -370,6 +461,10 @@ class Platform:
         self.log.info('Plugins loaded')
 
     def install_all_plugins(self):
+        """Installs all loaded plugins onto the platform.
+        
+        Delegates the actual installation to the PluginManager.
+        """
         self.log.debug('Installing all plugins...')
         self.plugins_manager.install_all_plugins()
         self.log.info('All plugins installed')
@@ -430,6 +525,12 @@ class Platform:
         self.log.info('All Plugins disposed')
 
     def create_resource_loader(self):
+        """Creates new instance of the resource loader capable of loading 
+        "plugin" and "class" resources type.
+        
+        This method may be overriden in a subclass if a special or extended 
+        implementation of the ResoruceLoader is needed.
+        """
         resource_loader = BaseResourceLoader()
         plugin_handler = PluginLoaderHandler(resource_loader)
         class_handler = ClassProtocolHandler(resource_loader)
@@ -438,13 +539,30 @@ class Platform:
         return resource_loader
 
     def create_plugin_finder(self):
+        """Creates new instance of the plugins finder-loader object.
+        
+        This method is an extension point so it can be overriden in a 
+        subimplementation to provide different implementation of the finder
+        object. The return type is expected to be compatible with object of type
+        termite.loader.BaseFinder. 
+        """
         pf = PlatformPluginsFinder(self.get_restricted_modules_list())
         return pf
 
     def get_restricted_modules_list(self):
+        """Returns a list of modules to which the access from the plugins will
+        be restricted.
+        
+        Currently read from configuration - section `platform`, property 
+        `restricted-modules`.
+        """
         return self.config.get('platform', 'restricted-modules', fallback='').split(',') or []
 
     def success_init(self):
+        """Called when the platform was successfully initialzed.
+        
+        Currently registers the global finder object to the system path.
+        """
         register_finder(self.plugins_finder)
         self.log.info('Registered path finder: %s' % self.plugins_finder)
 
@@ -497,10 +615,6 @@ class PluginManager:
         self.__build_dependecies__(plugin_container)
 
     def install_plugin(self, plugin_id):
-        # 1. Load the plugin resource
-        # 2. Add to dependencies manager
-        # 2. Register Finder/Loader for this particular plugin
-        # 3. Load the main plugin classes
         plugin = self.get_plugin(plugin_id)
         if not self.dependencies_manager.all_dependencies_satisfied(plugin_id):
             raise Exception('Not all dependencies satisfied for plugin: %s' % plugin_id)
