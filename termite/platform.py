@@ -30,10 +30,10 @@ from termite.tools import Proxy
 
 class Plugin:
     """Base class for all Plugins.
-    
+
     This is the entry point in the plugin itself. Each plugin MUST expose
     at least one implementation of Plguin.
-    
+
     """
 
     STATE_UNINSTALLED = 0x0
@@ -43,14 +43,14 @@ class Plugin:
 
     STATE_INSTALLED = 0x1
     """The plugin is installed on the platform.
-    
+
     At this point all dependencies for the plugin had been resolved and satisfied.
     """
 
     STATE_ACTIVE = 0x2
     """ The plugin has been successfully activated.
-    
-    At this point, the call to Plugin.activate(...) has been made and no errors 
+
+    At this point, the call to Plugin.activate(...) has been made and no errors
     were detected.
     """
 
@@ -60,38 +60,38 @@ class Plugin:
 
     STATE_DISPOSED = 0x4
     """ The plugin is ready to be removed from the platform.
-    
+
     This point may have been reached by calling PluginManager.dispose(...) or
     it may be a result of an error during installation (such as dependencies that
     had not been satisfied).
-    
+
     The plugin will be completely removed from the platform on the next garbage
     collection cycle.
     """
 
     def activate(self):
         """Called to activate the plugin.
-        
-        This method is called once the plugin has been installed and all of the 
+
+        This method is called once the plugin has been installed and all of the
         declared dependencies have been resolved and are available.
-        
-        If the method raises an error, the activation of the plugin will be 
+
+        If the method raises an error, the activation of the plugin will be
         canceled and the plugin will be put in an ERROR state.
-        
+
         This method is intended to be implemented in a subclass.
         """
         pass
 
     def deactivate(self):
         """Called to deactivate the plugin.
-        
+
         This method is called when the plugin is ready to be deactivated and no
         longer will be used by the platform.
-        
+
         This method is intended to be implemented in a subclass. Typical usage
         would be to free any used resources by the plugin and to perform a final
         shutdown procedure.
-        
+
         If an error is raised by this method, the plugin will be put in an ERROR
         state.
         """
@@ -99,7 +99,7 @@ class Plugin:
 
     def on_state_change(self, state):
         """Called every time when the plugin state chnages.
-        
+
         state is the new state of the plugin.
         """
         pass
@@ -107,30 +107,30 @@ class Plugin:
 
 class PluginContainer:
     """Wrapper around a real plugin instance.
-    
-    The platform does not interact directly with the plugin instances, but 
-    interacts with a PluginContainer instace instead. The plugin container 
+
+    The platform does not interact directly with the plugin instances, but
+    interacts with a PluginContainer instace instead. The plugin container
     provides a sandbox around a plugin and maintains a state and context that is
-    of relevance to the plugin platform, but is not directly a concern of the 
-    plugin itself. This way there is a separation of concerns - the plugin 
-    handles and performs functions of relevance to the business and the 
+    of relevance to the plugin platform, but is not directly a concern of the
+    plugin itself. This way there is a separation of concerns - the plugin
+    handles and performs functions of relevance to the business and the
     container handles the plugin management context.
-    
+
     The plugin container maintains the plugin state and metadata for the plugin
     itself (version, the manifest file, plugin loader, dependencies etc).
     """
     def __init__(self, plugin_ref, resource_loader, plugin_manager):
         """Creates new instance of a PluginContainer.
-        
-        plugin_ref is a refrence to a real plugin, usually a refrence to a 
-        plugin physical resource. Most of the time this will be a relevant URL 
+
+        plugin_ref is a refrence to a real plugin, usually a refrence to a
+        plugin physical resource. Most of the time this will be a relevant URL
         to the plugin resource itself. The plugin_ref is a unique identifier for
         a particular plugin (it cannot point to more than one plugin and no more
         than one plugin can have the same reference).
-        
-        resource_loader the ResourceLoader used to load the actual plugin 
+
+        resource_loader the ResourceLoader used to load the actual plugin
         resource. See termite.resources.BaseResourceLoader for more details.
-        
+
         plugin_manager the PluginManager that manages this plugin container.
         """
         self.loader = resource_loader
@@ -147,15 +147,15 @@ class PluginContainer:
 
     def load(self):
         """Loads the plugin onto the platform.
-        
-        Loads the plugin resource using the ResourceManager and initialized the 
-        plugin state. 
-        
+
+        Loads the plugin resource using the ResourceManager and initialized the
+        plugin state.
+
         Note that no plugin instances are attempted to be created and no actual
         code from the plugin is executed at this point. This loads the metadata
         descrribing the plugin itself.
-        
-        At this point, although the plugin is loaded, it is not yet available 
+
+        At this point, although the plugin is loaded, it is not yet available
         as a dependency on the platform.
         """
         if self.plugin_state == Plugin.STATE_DISPOSED:
@@ -169,15 +169,15 @@ class PluginContainer:
 
     def install(self):
         """Installs the plugin onto the platform.
-        
+
         The plugin dependencies must be available in order for the plugin to be
-        installed. 
-        
-        Once the dependecies are resolved, the plugin hooks are created and the 
-        plugin state is set to INSTALLED. 
-        
-        Raises a PluginLifecycleException if the plugin is not in the proper 
-        state for installation. Refer to the plugin state diagram for the 
+        installed.
+
+        Once the dependecies are resolved, the plugin hooks are created and the
+        plugin state is set to INSTALLED.
+
+        Raises a PluginLifecycleException if the plugin is not in the proper
+        state for installation. Refer to the plugin state diagram for the
         allowed states and transitions.
         """
         if self.plugin_state is not Plugin.STATE_UNINSTALLED:
@@ -193,12 +193,12 @@ class PluginContainer:
 
     def create_hooks(self):
         """Instantiates the plugin hooks.
-        
+
         A plugin hook is an object which life-cycle is managed by the platform.
         This is the entry point to to plugin.
-        
-        A plugin hook can be specified by type (class). The class must be 
-        defined in the plugin modules. The hooks are specified in the plugin 
+
+        A plugin hook can be specified by type (class). The class must be
+        defined in the plugin modules. The hooks are specified in the plugin
         manifest file in the section "Plugin-Classes".
         """
         manifest = self.plugin.get_manifest()
@@ -217,11 +217,11 @@ class PluginContainer:
 
     def activate(self):
         """Activates the plugin.
-        
+
         A plugin can be activated only it was alerady successfully installed.
-        A deactivated plugin may be activated again (but that would mean that 
+        A deactivated plugin may be activated again (but that would mean that
         the plugin was already installed earlier, before the first activation).
-        
+
         When activated, if the plugin exposes any hooks, on each hook instance
         the method "activate" will be invoked.
         """
@@ -239,11 +239,11 @@ class PluginContainer:
 
     def deactivate(self):
         """Deactivates a plugin.
-        
+
         Only an active plugin can be deactivated. If the plugin is not in ACTIVE
         state, an error would be raised.
-        
-        If the plugin exposes any hooks, on each hook instance the method 
+
+        If the plugin exposes any hooks, on each hook instance the method
         "deactivate" will be invoked.
         """
         if self.plugin_state is not Plugin.STATE_ACTIVE:
@@ -259,8 +259,8 @@ class PluginContainer:
 
     def uninstall(self):
         """Uninstalls a plugin.
-        
-        Once uninstalled, the plugin will no loger be considered as a part of 
+
+        Once uninstalled, the plugin will no loger be considered as a part of
         the platform and cannot provide any dependencies.
         """
         if self.plugin_state not in [Plugin.STATE_DEACTIVATED, Plugin.STATE_INSTALLED]:
@@ -270,8 +270,8 @@ class PluginContainer:
 
     def dispose(self):
         """Disposes a plugin.
-        
-        When disposing a plugin, the references to the plugin hooks (if any) 
+
+        When disposing a plugin, the references to the plugin hooks (if any)
         will be deleted so they would be garbadge-collected. Also the references
         to the plugin metadata will be deleted. Once disposed, the plugin cannot
         be re-installed or reused in any way - it awaits final destruction.
@@ -284,7 +284,7 @@ class PluginContainer:
         self.plugin = None
 
     def notify_state_change(self, state):
-        """Notifies the plugin hooks if a change in the state of the plugin 
+        """Notifies the plugin hooks if a change in the state of the plugin
         occurs.
         """
         for hook in self.plugin_hooks:
@@ -295,17 +295,17 @@ class PluginContainer:
 
     def get_environ(self):
         """Returns the sandbox environment of the plugin.
-        
-        Once a plugin is created, all of its hooks live in a sandboxed 
-        environment. This means that the access to other modules (outside the 
+
+        Once a plugin is created, all of its hooks live in a sandboxed
+        environment. This means that the access to other modules (outside the
         plugin native modules) is in the loose sense managed (or in the strctest
-        sense constrained) and there have access only to a couple of globals. 
+        sense constrained) and there have access only to a couple of globals.
         This method defines the globals for the plugin hooks instances.
-        
+
         If inside a plugin, you can make sure that you're running on the termite
         platforum by checking for the global '__platform__' that will be set to
         the value "termite".
-        
+
         """
         return {'__platform__': 'termite'}
 
@@ -315,66 +315,66 @@ class PluginContainer:
         if self.plugin:
             return self.plugin.state
         return None
-    
+
     def __str__(self):
         return 'PluginContainer {%s, %s (%s)}' % (self.plugin_id, self.version, self.plugin_ref)
 
 
 class Platform:
     """Represents a single plugins platform.
-    
+
     A platform manages a set of plugins. It manages the plugins life cycle (
     installation, activation, uninstallation, deactivation, disposal), manages
-    the plugins sandboxes - access to specific resources and global shared 
+    the plugins sandboxes - access to specific resources and global shared
     state, manages the plugins access to other plugins packages and modules and
     also manages the plugin dependencies.
-    
-    This type is the main entry point for creating and managing the plugins 
+
+    This type is the main entry point for creating and managing the plugins
     system. It provides interface for starting and shutting down the system
     (platform) and for inducing a certaing system-wide state change such as
     installing all plugins, deactivating all plugins and so on.
-    
-    The platform delegates the actual plugin life-cycle management to a plugin 
-    manager (see termite.platform.PluginManager). 
-    The resource management is delegated to a resource loader 
-    (see termite.resources.ResourceLoader). 
-    The access to exposed packages and modules of a plugin is provided and 
-    managed by a special loader-finder object (see 
+
+    The platform delegates the actual plugin life-cycle management to a plugin
+    manager (see termite.platform.PluginManager).
+    The resource management is delegated to a resource loader
+    (see termite.resources.ResourceLoader).
+    The access to exposed packages and modules of a plugin is provided and
+    managed by a special loader-finder object (see
     termite.loader.PlatformPluginsFinder).
-    
-    
+
+
     Configuration
-    
-    The platform is initiated with a configuration ojbect. The following are 
+
+    The platform is initiated with a configuration ojbect. The following are
     some of the most important configuration properties:
         * Section "platform":
-            * plugins-dir - a list of directiories that contain plugins. The 
+            * plugins-dir - a list of directiories that contain plugins. The
             directories names should be separated by comma (,).
             * restricted-modules - a list of restricted python modules. These
             modules will not be available to any plugin on the platform. This
             is a comma (,) separated list of modules names.
-    
-    
+
+
     Typical usage
-    
-    Typically you want to create an instance of the Platform to manage your 
-    plugins. In most cases youll need only one instance of the platform per 
+
+    Typically you want to create an instance of the Platform to manage your
+    plugins. In most cases youll need only one instance of the platform per
     application. The creation of a platform object may look like this:
-    
+
         configuration = ConfigParser()
         configuration.read('platform.ini')
-        
+
         platform = Platform(configuration)
-        
+
         platform.start()
-    
+
     All of the plugins are isolated to this platform instance. Each plugin lives
-    in a sandboxed space with its own globals/locals ultimately managed by the 
-    platform instance. Only a few global object will be shared between the 
-    plugins - for example some modules of the underlying Python path may be 
+    in a sandboxed space with its own globals/locals ultimately managed by the
+    platform instance. Only a few global object will be shared between the
+    plugins - for example some modules of the underlying Python path may be
     shared (even between different platform instances if they run in the same
     interpreter).
-     
+
     """
     STATE_INITIALIZING = 'initializing'
     STATE_ACTIVE = 'active'
@@ -394,13 +394,13 @@ class Platform:
 
     def start(self):
         """Starts the plugin platform.
-        
+
         The startup process of the platform can be summed up in the following
         steps:
             1. The platform locates the plugins from the plugin directories. The
             plugins may be in different formats (as exploded directory, as some
             kind of archive).
-            2. The platform loads the plugins. This means that each plugin 
+            2. The platform loads the plugins. This means that each plugin
             content is loaded (at least partially) and the metadata is obtained
             (usually the plugin manifest file is read).
             3. The platform installs the plugins. This step checks for plugin
@@ -420,17 +420,17 @@ class Platform:
 
     def shutdown(self):
         """Shuts down the platform and all plugins managed by it.
-        
+
         Performs basically the reverse operation of the "start" method. The
         shut down of the platform follow these steps:
-            1. Deactivates all the plugins. All active plugins will be notified 
+            1. Deactivates all the plugins. All active plugins will be notified
             to deactivate and perform theirs deactivation procedure. Waits for
             all plugins to finish the deactivation.
             2. Uninstalls all installed plugins. This frees up the resources and
             destroys the dependency graph.
             3. Destroys all plugins. This releases the resources taken up by
             the plugin loading process.
-            4. Performs garbagde collection on any still allocated resources 
+            4. Performs garbagde collection on any still allocated resources
             before shutting down completely.
         """
         self.log.info('Platform shutting down...')
@@ -444,10 +444,10 @@ class Platform:
 
     def load_all_plugins(self):
         """Scans the plugin directories for plugins and loads the plugins.
-        
+
         Scans each location for plugins and extracts the plugins references from
-        each location. Each plugin reference is then registered with the 
-        PluginManager which performs the actual loading of the plugin by its 
+        each location. Each plugin reference is then registered with the
+        PluginManager which performs the actual loading of the plugin by its
         reference.
         """
         locations = self.config.get('platform', 'plugins-dir', fallback='').split(',') or []
@@ -462,7 +462,7 @@ class Platform:
 
     def install_all_plugins(self):
         """Installs all loaded plugins onto the platform.
-        
+
         Delegates the actual installation to the PluginManager.
         """
         self.log.debug('Installing all plugins...')
@@ -525,10 +525,10 @@ class Platform:
         self.log.info('All Plugins disposed')
 
     def create_resource_loader(self):
-        """Creates new instance of the resource loader capable of loading 
+        """Creates new instance of the resource loader capable of loading
         "plugin" and "class" resources type.
-        
-        This method may be overriden in a subclass if a special or extended 
+
+        This method may be overriden in a subclass if a special or extended
         implementation of the ResoruceLoader is needed.
         """
         resource_loader = BaseResourceLoader()
@@ -540,11 +540,11 @@ class Platform:
 
     def create_plugin_finder(self):
         """Creates new instance of the plugins finder-loader object.
-        
-        This method is an extension point so it can be overriden in a 
+
+        This method is an extension point so it can be overriden in a
         subimplementation to provide different implementation of the finder
         object. The return type is expected to be compatible with object of type
-        termite.loader.BaseFinder. 
+        termite.loader.BaseFinder.
         """
         pf = PlatformPluginsFinder(self.get_restricted_modules_list())
         return pf
@@ -552,15 +552,15 @@ class Platform:
     def get_restricted_modules_list(self):
         """Returns a list of modules to which the access from the plugins will
         be restricted.
-        
-        Currently read from configuration - section `platform`, property 
+
+        Currently read from configuration - section `platform`, property
         `restricted-modules`.
         """
         return self.config.get('platform', 'restricted-modules', fallback='').split(',') or []
 
     def success_init(self):
         """Called when the platform was successfully initialzed.
-        
+
         Currently registers the global finder object to the system path.
         """
         register_finder(self.plugins_finder)
@@ -568,6 +568,17 @@ class Platform:
 
 
 class PluginManager:
+    """Manages the plugins life-cycle.
+
+    The actual loading of the plugin resources is delegated to a ResoruceLoader.
+
+    The dependency tracking and management is delegated to a
+    PluginDependenciesManager.
+
+    The plugin manager keeps track of the plugins, manages with the
+    PluginContainers of the plugins and provides a facade for managing the
+    life-cycle of each plugin independently or in a bulk.
+    """
     def __init__(self, resource_loader, plugin_finder):
         self.log = logging.getLogger('termite.platform.PluginManager')
         self.resource_loader = resource_loader
@@ -580,6 +591,14 @@ class PluginManager:
         self.dependencies_built = False
 
     def add_plugin(self, plugin_ref):
+        """Registers new plugin with the plugin manager by the plugin reference.
+
+        A new PluginContainer will be created for the plugin reference. If the
+        plugin has already be loaded and is managed, the call to this method
+        will trigger a reload of the plugin.
+        If the plugin was not previously loaded and is not managed, it will be
+        registered for management.
+        """
         if self.plugins_by_ref.get(plugin_ref):
             raise Exception('Plugin with reference %s already added' % plugin_ref)
         pc = PluginContainer(plugin_ref, self.resource_loader, self)
@@ -590,8 +609,11 @@ class PluginManager:
             self.plugins_by_ref[plugin_ref] = pc
             self.plugins_by_id[pc.plugin_id] = pc
             self.__build_dependecies__(pc)
-    
+
     def __load_dependencies__(self, pc):
+        """Loads the dependcies for the wrapped plugin using the dependecies
+        manager.
+        """
         dm = self.dependencies_manager
         dm.dependency(pc.plugin_id)
         dm.add_provider(pc.plugin_id, pc.manifest.version, pc)
@@ -599,14 +621,20 @@ class PluginManager:
         for rq in pc.manifest.requires:
             req_dep = dm.dependency(pc.plugin_id)
             dm.require(pc.plugin_id, rq.name, rq.version_range[0], rq.version_range[1])
-        
+
         # add all exports as providers as well
         for exp in pc.manifest.exports:
             xdp = dm.dependency(exp.name)
             dm.add_provider(xdp.name, exp.version, pc)
-        
-    
+
+
     def reload_plugin(self, plugin_id, plugin_container):
+        """Reloads a plugin that is already registered and managed by this
+        plugin manager.
+
+        During the reload process, first the plugin dependencies will be cleared
+        and the all the dependencies will be build and reloaded again.
+        """
         old_plugin = self.plugins_by_id[plugin_id]
         del self.plugins_by_id[plugin_id]
         del self.plugins_by_ref[old_plugin.plugin_ref]
@@ -615,9 +643,22 @@ class PluginManager:
         self.__build_dependecies__(plugin_container)
 
     def install_plugin(self, plugin_id):
+        """Installs a plugin onto the platform.
+
+        plugin_id is the ID of the plugin to be installed. Note that the plugin
+        must be loaded and initialzed before installing.
+
+        During insallation, the declared dependecies will be checked for
+        availability. If not all dependencies are available, then an error will
+        be raised.
+
+        The plugin resources will be added to the manmaged Finder object to be
+        available across the platform and the plugin state will be changed to
+        INSTALLED.
+        """
         plugin = self.get_plugin(plugin_id)
         if not self.dependencies_manager.all_dependencies_satisfied(plugin_id):
-            raise Exception('Not all dependencies satisfied for plugin: %s' % plugin_id)
+            raise UnsatisfiedDependencyException('Not all dependencies satisfied for plugin: %s' % plugin_id)
         self.plugin_finder.add_plugin(plugin)
         plugin.install()
         self.__mark_available__(plugin)
@@ -663,8 +704,8 @@ class PluginManager:
 
     def __build_dependecies__(self, plugin_container):
         self.__load_dependencies__(plugin_container)
-        
-    
+
+
     def build_dependencies(self):
         # load all exports
         for plugin_id, pc in self.plugins_by_id.items():
