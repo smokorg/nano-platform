@@ -360,7 +360,9 @@ class Platform:
     Typically you want to create an instance of the Platform to manage your
     plugins. In most cases youll need only one instance of the platform per
     application. The creation of a platform object may look like this:
-
+    
+    .. code-block:: python
+        
         configuration = ConfigParser()
         configuration.read('platform.ini')
 

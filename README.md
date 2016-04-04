@@ -28,3 +28,9 @@ Documentation
 -------------
 
 [![Documentation Status](https://readthedocs.org/projects/termite-platform/badge/?version=latest)](https://readthedocs.org/projects/termite-platform/?badge=latest)
+
+
+Travis
+------
+
+[![Build Status](https://travis-ci.org/smokorg/termite-platform.svg?branch=master)](https://travis-ci.org/smokorg/termite-platform)
