@@ -38,6 +38,7 @@ CODE_DIRECTORY = 'termite'
 DOCS_DIRECTORY = 'docs'
 TESTS_DIRECTORY = 'tests'
 PYTEST_FLAGS = ['--doctest-modules']
+IGNORE_PATHS = ["tests/import"]
 
 # Import metadata. Normally this would just be:
 #
@@ -180,7 +181,7 @@ def _test():
     import pytest
     # This runs the unit tests.
     # It also runs doctest, but only on the modules in TESTS_DIRECTORY.
-    return pytest.main(PYTEST_FLAGS + [TESTS_DIRECTORY])
+    return pytest.main(PYTEST_FLAGS + [TESTS_DIRECTORY] + ["--ignore"] + IGNORE_PATHS)
 
 
 def _test_all():
