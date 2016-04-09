@@ -666,22 +666,59 @@ class PluginManager:
         self.__mark_available__(plugin)
 
     def activate_plugin(self, plugin_id):
+        """Activates the specified plugin.
+        
+        plugin_id is the ID of the plugin to be activated. Note that the plugin
+        must be loaded and installed before being activated.
+        
+        During the activation, the plugin hooks will be instantiated and the
+        ``activate`` method will be called.
+        """
         plugin = self.get_plugin(plugin_id)
         plugin.activate()
 
     def deactivate_plugin(self, plugin_id):
+        """Deactivates the specified plugin.
+        
+        plugin_id is the ID of the plugin to be deactivated. Note that only 
+        ACTIVE plugins can be deactivated.
+        
+        During the deactivation, the ``deactivate`` method will be called on any
+        exposed plugin hooks.
+        """
         plugin = self.get_plugin(plugin_id)
         if plugin.plugin_state is Plugin.STATE_ACTIVE:
             plugin.deactivate()
 
     def uninstall_plugin(self, plugin_id):
+        """Uninstalls the specified plugin.
+        
+        plugin_id is the ID of the plugin to be uninstalled. 
+        
+        Once uninstalled, the plugin will become unavailable as a dependency on
+        the platform.
+        """
         plugin = self.get_plugin(plugin_id)
         plugin.uninstall()
 
     def gc(self):
+        """Performs a garbadge collection of the unused platform resources.
+        
+        The actual call may not release the resources immidiately, but instead
+        will schedule a garbadge collection at the soonest possible time.
+        """
         pass
 
     def install_all_plugins(self):
+        """Installs all loaded plugins on the platform.
+        
+        This is usually the case when the platform starts up and needs to load
+        all the loaded plugins at once.
+        
+        The installation is done in the reverse dependency order, with the 
+        plugins that have no dependencies to other plugins being installed 
+        first.
+        """
         self.log.debug('Installing all plugins...')
         install_order_deps = self.dependencies_manager.reverese_dependency_order()
         prov_set = set()
@@ -696,9 +733,20 @@ class PluginManager:
         self.log.info('Plugins installed')
 
     def get_all_plugins(self):
+        """Returns a reference to all plugins known to this manager regardless
+        of the plugin state.
+        
+        The order of the plugins is NOT guaranteed.
+        """
         return [pr for p, pr in self.plugins_by_id.items()]
 
     def get_plugin(self, plugin_id):
+        """Looks up a plugin registered with this manager by the plugin's ID.
+        
+        plugin_id is the ID of the plugin to look for. If the plugin is found, 
+        then a reference to the plugin container is returned. If no plugin with
+        the specified id can be found, an Exception is raised.
+        """
         plugin = self.plugins_by_id.get(plugin_id)
         if not plugin:
             raise Exception('Plugin with id %s is not registered' % plugin_id)
